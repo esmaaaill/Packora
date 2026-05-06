@@ -102,7 +102,7 @@ const LandingPage = () => {
               </h1>
               <p className="hero-description">
                 Elegant 3D box preview. Infinite customization.<br />
-                Built live for you, Nermeen.
+                Built live for you.
               </p>
 
               <div className="hero-cta-group">
