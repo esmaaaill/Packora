@@ -1,0 +1,145 @@
+/* PaymentResult.css — Shared styles for PaymentSuccess and PaymentFailed */
+
+.pay-result-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  background: var(--background, #0f1117);
+}
+
+.pay-result-card {
+  background: var(--card-bg, #1e2130);
+  border-radius: 24px;
+  padding: 56px 48px;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  animation: pay-result-appear 0.4s ease-out;
+}
+
+.pay-result-card--success {
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  box-shadow: 0 0 40px rgba(52, 211, 153, 0.08);
+}
+
+.pay-result-card--failed {
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.08);
+}
+
+@keyframes pay-result-appear {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Icon ──────────────────────────────────────────────────────────────── */
+.pay-result-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.pay-result-icon--success {
+  background: rgba(52, 211, 153, 0.12);
+  color: #34d399;
+}
+
+.pay-result-icon--failed {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+}
+
+/* ── Text ───────────────────────────────────────────────────────────────── */
+.pay-result-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-main, #e2e8f0);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.pay-result-subtitle {
+  font-size: 1rem;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.pay-result-order-badge {
+  background: rgba(79, 124, 255, 0.1);
+  border: 1px solid rgba(79, 124, 255, 0.3);
+  color: #93c5fd;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+}
+
+.pay-result-order-badge--failed {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #fca5a5;
+}
+
+.pay-result-note {
+  font-size: 0.875rem;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.pay-result-redirect-note {
+  font-size: 0.8rem;
+  color: #4f7cff;
+  margin: 0;
+}
+
+/* ── Actions ────────────────────────────────────────────────────────────── */
+.pay-result-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.pay-result-btn {
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.pay-result-btn--primary {
+  background: linear-gradient(135deg, #4f7cff, #7c5cff);
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(79, 124, 255, 0.3);
+}
+
+.pay-result-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(79, 124, 255, 0.45);
+}
+
+.pay-result-btn--secondary {
+  background: transparent;
+  border: 1px solid var(--border, #2d3148);
+  color: var(--text-muted, #94a3b8);
+}
+
+.pay-result-btn--secondary:hover {
+  border-color: var(--primary, #4f7cff);
+  color: var(--primary, #4f7cff);
+}

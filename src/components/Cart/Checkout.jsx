@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import ShippingAddress from './ShippingAddress';
-import Payment from './Payment';
+import PaymobCheckout from './PaymobCheckout';  // ← Live Paymob integration
 import ReviewOrder from './ReviewOrder';
 import Navbar from '../Navbar/Navbar';
 import './Checkout.css';
@@ -80,8 +80,8 @@ export default function Checkout() {
 
         <div className="checkout-content">
           {checkoutStep === 'shipping' && <ShippingAddress />}
-          {checkoutStep === 'payment' && <Payment />}
-          {checkoutStep === 'review' && <ReviewOrder />}
+          {checkoutStep === 'payment'  && <PaymobCheckout />}
+          {checkoutStep === 'review'   && <ReviewOrder />}
         </div>
       </main>
       <Footer/>

@@ -39,6 +39,8 @@ import Footer from './components/Footer/Footer';
 import LoginPage from './components/LoginPage/LoginPage';
 import RequireAuth from './components/RequireAuth';
 import BulkOrder from './components/BulkOrder/BulkOrder';
+import PaymentSuccess from './components/Cart/PaymentSuccess';
+import PaymentFailed from './components/Cart/PaymentFailed';
 
 let router = createBrowserRouter([
   {
@@ -52,6 +54,9 @@ let router = createBrowserRouter([
       { path: 'ForgetPassword', element: <ForgetPassword /> },
       { path: 'EmailCheck', element: <EmailCheck /> },
       { path: 'reset-password', element: <ResetPassword /> },
+      // Public payment result pages — Paymob redirects here; no JWT required
+      { path: 'payment-success', element: <PaymentSuccess /> },
+      { path: 'payment-failed',  element: <PaymentFailed /> },
       {
         element: <RequireAuth />,
         children: [

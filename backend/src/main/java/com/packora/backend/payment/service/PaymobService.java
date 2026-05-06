@@ -2,6 +2,7 @@ package com.packora.backend.payment.service;
 
 import com.packora.backend.model.Order;
 import com.packora.backend.model.Payment;
+import com.packora.backend.model.enums.OrderStatus;
 import com.packora.backend.model.enums.PaymentStatus;
 import com.packora.backend.payment.config.PaymobConfig;
 import com.packora.backend.payment.dto.*;
@@ -11,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Mac;
@@ -19,22 +21,28 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * PaymobService — orchestrates the Paymob Accept API 3-step payment flow:
  *
- *  Step 1 → POST /auth/tokens           : authenticate → get auth_token
- *  Step 2 → POST /ecommerce/orders      : register order → get paymob_order_id
- *  Step 3 → POST /acceptance/payment_keys : get payment key → build iframe URL
+ *  Step 1 → POST /auth/tokens              : authenticate → get auth_token
+ *  Step 2 → POST /ecommerce/orders         : register order → get paymob_order_id
+ *  Step 3 → POST /acceptance/payment_keys  : get payment key → build iframe URL
  *
- * Also handles:
- *  - Webhook callback processing (update Payment entity status)
- *  - HMAC-SHA512 signature verification for security
+ * Security:
+ *  - All credentials read from environment variables via PaymobConfig (never hardcoded).
+ *  - HMAC-SHA512 verification on every incoming webhook before any DB write.
+ *  - Idempotent webhook processing: re-delivery of the same callback is a no-op.
+ *  - @Transactional on webhook processing to ensure DB consistency.
  */
 @Service
 public class PaymobService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymobService.class);
+
+    // Paymob HMAC algorithm — Accept API uses SHA-512
+    private static final String HMAC_ALGORITHM = "HmacSHA512";
 
     private final PaymobConfig paymobConfig;
     private final RestTemplate restTemplate;
@@ -61,9 +69,16 @@ public class PaymobService {
      * @param amountEGP   total amount in EGP (will be converted to cents)
      * @param billingData buyer billing info required by Paymob
      * @return PaymentInitResponse with iframeUrl, paymentKey, paymobOrderId
+     * @throws IllegalArgumentException if the orderId does not exist in our DB
+     * @throws RuntimeException         if any Paymob API step fails
      */
+    @Transactional
     public PaymentInitResponse initiatePayment(Long orderId, Double amountEGP, BillingData billingData) {
         log.info("[Paymob] Initiating payment for Packora order ID: {}", orderId);
+
+        // Fail fast if the order doesn't exist — don't call Paymob for ghost orders
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("Order not found: " + orderId));
 
         // ── Step 1: Authenticate ───────────────────────────────────────────
         String authToken = authenticate();
@@ -83,23 +98,30 @@ public class PaymobService {
         log.info("[Paymob] iframe URL built: {}", iframeUrl);
 
         // ── Persist a PENDING payment record ──────────────────────────────
-        persistPendingPayment(orderId, amountEGP, paymobOrderId);
+        // We store "PAYMOB_ORDER_<id>" as a placeholder until the webhook arrives
+        // with the real Paymob transaction ID.
+        persistPendingPayment(order, amountEGP, paymobOrderId);
 
         return new PaymentInitResponse(iframeUrl, paymentKey, paymobOrderId);
     }
 
     /**
      * Processes an incoming Paymob webhook callback.
-     * 1. Verifies HMAC signature (rejects tampered requests).
-     * 2. Updates the Payment entity status based on success/failure.
+     *
+     * Security model:
+     *  1. Verify HMAC — reject anything that didn't come from Paymob.
+     *  2. Idempotency — if we already processed this Paymob txn, skip it.
+     *  3. DB update — update Payment status then sync Order status.
      *
      * @param payload   parsed callback JSON body
      * @param hmacValue HMAC signature from query param ?hmac=...
+     * @throws SecurityException if the HMAC signature is missing or invalid
      */
+    @Transactional
     public void processCallback(PaymobCallbackPayload payload, String hmacValue) {
-        // Security: verify HMAC before touching the database
+        // ── Security gate: verify HMAC before ANY database operation ──────
         if (!verifyHmac(payload, hmacValue)) {
-            log.warn("[Paymob] HMAC verification FAILED — callback rejected");
+            log.warn("[Paymob] HMAC verification FAILED — callback rejected (possible tampering attempt)");
             throw new SecurityException("Invalid Paymob HMAC signature");
         }
 
@@ -109,36 +131,64 @@ public class PaymobService {
             return;
         }
 
-        String paymobTxnId = String.valueOf(txn.getId());
-        boolean success = txn.isSuccess();
+        String paymobTxnId  = String.valueOf(txn.getId());
+        boolean success     = txn.isSuccess();
 
-        log.info("[Paymob] Callback received — txnId: {}, success: {}", paymobTxnId, success);
+        log.info("[Paymob] Verified callback — txnId: {}, success: {}", paymobTxnId, success);
 
-        // Look up payment by Paymob transaction ID OR by merchant_order_id
-        paymentRepository.findByTransactionId(paymobTxnId).ifPresentOrElse(
-            payment -> updatePaymentStatus(payment, success, txn),
-            () -> {
-                // Payment not yet persisted with a txn ID — try by
-                // merchantOrderId (our internal order ID stored in merchant_order_id)
-                if (txn.getOrder() != null && txn.getOrder().getMerchantOrderId() != null) {
-                    String merchantOrderId = txn.getOrder().getMerchantOrderId();
-                    try {
-                        Long packOrderId = Long.parseLong(merchantOrderId);
-                        List<Payment> pendingPayments = paymentRepository.findByOrderId(packOrderId)
-                                .stream()
-                                .filter(p -> p.getStatus() == PaymentStatus.PENDING)
-                                .toList();
-                        if (!pendingPayments.isEmpty()) {
-                            updatePaymentStatus(pendingPayments.get(0), success, txn);
-                        }
-                    } catch (NumberFormatException e) {
-                        log.warn("[Paymob] Could not parse merchantOrderId '{}' as Long", merchantOrderId);
-                    }
-                } else {
-                    log.warn("[Paymob] No matching payment found for txnId: {}", paymobTxnId);
+        // ── Idempotency check: if txn was already processed, skip ─────────
+        Optional<Payment> existingByTxnId = paymentRepository.findByTransactionId(paymobTxnId);
+        if (existingByTxnId.isPresent()) {
+            Payment existing = existingByTxnId.get();
+            if (existing.getStatus() != PaymentStatus.PENDING) {
+                log.info("[Paymob] Txn {} already processed with status {} — skipping (idempotent)",
+                        paymobTxnId, existing.getStatus());
+                return;
+            }
+            // Still PENDING — update it
+            updatePaymentStatus(existing, success, txn);
+            return;
+        }
+
+        // ── Look up by Paymob order placeholder ───────────────────────────
+        if (txn.getOrder() != null) {
+            Long paymobOrderId = txn.getOrder().getId();
+            if (paymobOrderId != null) {
+                String placeholder = "PAYMOB_ORDER_" + paymobOrderId;
+                Optional<Payment> byPlaceholder = paymentRepository
+                        .findByTransactionIdAndStatus(placeholder, PaymentStatus.PENDING);
+
+                if (byPlaceholder.isPresent()) {
+                    updatePaymentStatus(byPlaceholder.get(), success, txn);
+                    return;
                 }
             }
-        );
+
+            // ── Fallback: look up by merchant_order_id (our Packora order ID) ─
+            // merchant_order_id format: "<orderId>_<timestamp>" (timestamp appended for uniqueness)
+            String merchantOrderId = txn.getOrder().getMerchantOrderId();
+            if (merchantOrderId != null) {
+                try {
+                    // Strip the "_<timestamp>" suffix if present
+                    String rawId = merchantOrderId.contains("_")
+                            ? merchantOrderId.split("_")[0]
+                            : merchantOrderId;
+                    Long packOrderId = Long.parseLong(rawId);
+                    List<Payment> pendingPayments = paymentRepository.findByOrderId(packOrderId)
+                            .stream()
+                            .filter(p -> p.getStatus() == PaymentStatus.PENDING)
+                            .toList();
+                    if (!pendingPayments.isEmpty()) {
+                        updatePaymentStatus(pendingPayments.get(0), success, txn);
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    log.warn("[Paymob] Could not parse merchantOrderId '{}' as Long", merchantOrderId);
+                }
+            }
+        }
+
+        log.warn("[Paymob] No matching PENDING payment found for txnId: {} — callback ignored", paymobTxnId);
     }
 
     // ── PRIVATE — Paymob Step 1: Authentication ────────────────────────────
@@ -150,7 +200,7 @@ public class PaymobService {
         Map<String, Object> body = new HashMap<>();
         body.put("api_key", paymobConfig.getApiKey());
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, buildRequest(body), Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, buildJsonRequest(body), Map.class);
         validateResponse(response, "authentication");
 
         String token = (String) response.getBody().get("token");
@@ -166,15 +216,21 @@ public class PaymobService {
     private Long registerOrder(String authToken, Long packOrderId, long amountCents) {
         String url = paymobConfig.getBaseUrl() + "/ecommerce/orders";
 
+        // Append a timestamp suffix to make merchant_order_id globally unique per attempt.
+        // Paymob rejects duplicate merchant_order_ids across all time (not just per session).
+        // The webhook handler strips the suffix back to get our real orderId.
+        String uniqueMerchantOrderId = packOrderId + "_" + System.currentTimeMillis();
+
         Map<String, Object> body = new HashMap<>();
         body.put("auth_token", authToken);
         body.put("delivery_needed", false);
         body.put("amount_cents", amountCents);
         body.put("currency", "EGP");
-        body.put("merchant_order_id", String.valueOf(packOrderId)); // our internal ID as reference
-        body.put("items", List.of()); // empty items list is acceptable
+        body.put("merchant_order_id", uniqueMerchantOrderId);
+        body.put("items", List.of());
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, buildRequest(body), Map.class);
+        log.info("[Paymob] Registering order — merchant_order_id: {}", uniqueMerchantOrderId);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, buildJsonRequest(body), Map.class);
         validateResponse(response, "order registration");
 
         Object idObj = response.getBody().get("id");
@@ -193,14 +249,14 @@ public class PaymobService {
 
         Map<String, Object> body = new HashMap<>();
         body.put("auth_token", authToken);
-        body.put("expiration", 3600);           // 1 hour expiry
+        body.put("expiration", 3600);            // token valid for 1 hour
         body.put("order_id", paymobOrderId);
         body.put("billing_data", billingDataToMap(billingData));
         body.put("amount_cents", amountCents);
         body.put("currency", "EGP");
         body.put("integration_id", paymobConfig.getIntegrationId());
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(url, buildRequest(body), Map.class);
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, buildJsonRequest(body), Map.class);
         validateResponse(response, "payment key");
 
         String token = (String) response.getBody().get("token");
@@ -212,7 +268,7 @@ public class PaymobService {
 
     // ── PRIVATE — Helpers ──────────────────────────────────────────────────
 
-    /** Constructs the Paymob iFrame URL from the payment key */
+    /** Constructs the Paymob iFrame URL from the payment key and configured iframe ID */
     private String buildIframeUrl(String paymentKey) {
         return String.format(
             "https://accept.paymob.com/api/acceptance/iframes/%d?payment_token=%s",
@@ -221,20 +277,14 @@ public class PaymobService {
         );
     }
 
-    /** Wraps a map body into an HttpEntity with JSON headers */
-    private HttpEntity<Map<String, Object>> buildRequest(Map<String, Object> body) {
+    /** Wraps a map body into an HttpEntity with JSON Content-Type header */
+    private HttpEntity<Map<String, Object>> buildJsonRequest(Map<String, Object> body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new HttpEntity<>(body, headers);
     }
 
-    /** Wraps a string body into an HttpEntity with JSON headers */
-    @SuppressWarnings("unused")
-    private <T> HttpEntity<T> buildRequest(T body, HttpHeaders headers) {
-        return new HttpEntity<>(body, headers);
-    }
-
-    /** Validates that a Paymob response is 2xx and has a body */
+    /** Validates that a Paymob response is 2xx and has a non-null body */
     private void validateResponse(ResponseEntity<?> response, String step) {
         if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
             throw new RuntimeException(
@@ -243,7 +293,7 @@ public class PaymobService {
         }
     }
 
-    /** Converts BillingData to a Map (for embedding in the payment key request body) */
+    /** Converts BillingData DTO to a plain Map for embedding in the Paymob request body */
     private Map<String, Object> billingDataToMap(BillingData bd) {
         Map<String, Object> map = new HashMap<>();
         map.put("first_name",       safeStr(bd.getFirstName()));
@@ -262,45 +312,81 @@ public class PaymobService {
         return map;
     }
 
-    /** Returns value or "NA" if null/blank (Paymob requires all billing fields to be non-null) */
+    /**
+     * Returns the value or "NA" if null/blank.
+     * Paymob requires ALL billing fields to be non-null strings; "NA" is the safe fallback.
+     */
     private String safeStr(String value) {
         return (value != null && !value.isBlank()) ? value : "NA";
     }
 
-    /** Creates a PENDING Payment entity in the database when a payment is initiated */
-    private void persistPendingPayment(Long orderId, Double amountEGP, Long paymobOrderId) {
-        orderRepository.findById(orderId).ifPresent(order -> {
-            Payment payment = new Payment();
-            payment.setOrder(order);
-            payment.setAmount(amountEGP);
-            payment.setMethod("CARD");
-            payment.setStatus(PaymentStatus.PENDING);
-            payment.setTransactionId("PAYMOB_ORDER_" + paymobOrderId); // placeholder until callback
-            paymentRepository.save(payment);
-            log.info("[Paymob] Pending payment record saved for order {}", orderId);
-        });
+    /**
+     * Persists a PENDING Payment record so we can track state before the webhook arrives.
+     * The placeholder transactionId "PAYMOB_ORDER_<id>" is replaced by the real Paymob txn ID
+     * once the webhook is received and validated.
+     */
+    private void persistPendingPayment(Order order, Double amountEGP, Long paymobOrderId) {
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setAmount(amountEGP);
+        payment.setMethod("CARD");
+        payment.setStatus(PaymentStatus.PENDING);
+        payment.setTransactionId("PAYMOB_ORDER_" + paymobOrderId);
+        paymentRepository.save(payment);
+        log.info("[Paymob] PENDING payment record saved for order {}", order.getId());
     }
 
-    /** Updates a Payment entity status based on Paymob callback result */
+    /**
+     * Updates the Payment entity status based on the verified Paymob callback result.
+     * Also synchronises the parent Order status to keep them consistent.
+     */
     private void updatePaymentStatus(Payment payment,
                                       boolean success,
                                       PaymobCallbackPayload.TransactionObj txn) {
         String paymobTxnId = String.valueOf(txn.getId());
 
+        // Determine new status in priority order: voided > refunded > success/failed
+        PaymentStatus newStatus;
         if (txn.isVoided()) {
-            payment.setStatus(PaymentStatus.REFUNDED);
+            newStatus = PaymentStatus.REFUNDED;
         } else if (txn.isRefunded()) {
-            payment.setStatus(PaymentStatus.REFUNDED);
+            newStatus = PaymentStatus.REFUNDED;
         } else if (success) {
-            payment.setStatus(PaymentStatus.COMPLETED);
+            newStatus = PaymentStatus.COMPLETED;
         } else {
-            payment.setStatus(PaymentStatus.FAILED);
+            newStatus = PaymentStatus.FAILED;
         }
 
-        payment.setTransactionId(paymobTxnId); // update with the real Paymob transaction ID
+        payment.setStatus(newStatus);
+        payment.setTransactionId(paymobTxnId); // Replace placeholder with real Paymob txn ID
         paymentRepository.save(payment);
 
-        log.info("[Paymob] Payment {} updated → status: {}", paymobTxnId, payment.getStatus());
+        log.info("[Paymob] Payment {} → status updated to {}", paymobTxnId, newStatus);
+
+        // Sync parent Order status
+        syncOrderStatus(payment.getOrder(), newStatus);
+    }
+
+    /**
+     * Keeps the Order status in sync with the Payment status.
+     * COMPLETED payment → mark Order as PAID
+     * FAILED payment    → mark Order as CANCELLED
+     * REFUNDED payment  → mark Order as CANCELLED (can be enhanced to REFUNDED order status)
+     */
+    private void syncOrderStatus(Order order, PaymentStatus paymentStatus) {
+        if (order == null) return;
+
+        OrderStatus newOrderStatus = switch (paymentStatus) {
+            case COMPLETED -> OrderStatus.PAID;
+            case FAILED, REFUNDED -> OrderStatus.CANCELLED;
+            default -> null; // PENDING — no change
+        };
+
+        if (newOrderStatus != null) {
+            order.setStatus(newOrderStatus);
+            orderRepository.save(order);
+            log.info("[Paymob] Order {} status synced → {}", order.getId(), newOrderStatus);
+        }
     }
 
     // ── PRIVATE — HMAC Verification ────────────────────────────────────────
@@ -308,17 +394,22 @@ public class PaymobService {
     /**
      * Verifies the Paymob HMAC-SHA512 signature.
      *
-     * Paymob concatenates specific transaction fields (in strict order)
+     * Paymob concatenates specific transaction fields (in strict order, no separator)
      * and hashes them with your HMAC secret using SHA-512.
-     * We replicate the same calculation and compare against the received signature.
+     * We replicate the same calculation and compare (case-insensitive) against received.
      *
-     * Field order (Paymob official spec):
+     * Official field order (from Paymob docs):
      *   amount_cents, created_at, currency, error_occured, has_parent_transaction,
      *   id, integration_id, is_3d_secure, is_auth, is_capture, is_refunded,
      *   is_standalone_payment, is_voided, order.id, owner, pending,
      *   source_data.pan, source_data.sub_type, source_data.type, success
+     *
+     * @param payload       the full parsed webhook body
+     * @param receivedHmac  the ?hmac= query param value from Paymob
+     * @return true if the computed HMAC matches the received one
      */
     private boolean verifyHmac(PaymobCallbackPayload payload, String receivedHmac) {
+        // A missing HMAC is immediately rejected — Paymob always sends it
         if (receivedHmac == null || receivedHmac.isBlank()) {
             log.warn("[Paymob] No HMAC provided in callback query params");
             return false;
@@ -328,12 +419,13 @@ public class PaymobService {
             PaymobCallbackPayload.TransactionObj t = payload.getObj();
             if (t == null) return false;
 
-            String pan     = t.getSourceData() != null ? safeStr(t.getSourceData().getPan())     : "NA";
-            String subType = t.getSourceData() != null ? safeStr(t.getSourceData().getSubType()) : "NA";
-            String srcType = t.getSourceData() != null ? safeStr(t.getSourceData().getType())    : "NA";
-            String orderId = t.getOrder() != null ? String.valueOf(t.getOrder().getId()) : "NA";
+            // Safe extraction of nested fields
+            String pan     = (t.getSourceData() != null) ? safeStr(t.getSourceData().getPan())     : "NA";
+            String subType = (t.getSourceData() != null) ? safeStr(t.getSourceData().getSubType()) : "NA";
+            String srcType = (t.getSourceData() != null) ? safeStr(t.getSourceData().getType())    : "NA";
+            String orderId = (t.getOrder() != null)      ? String.valueOf(t.getOrder().getId())     : "NA";
 
-            // Concatenate fields in the exact order Paymob specifies
+            // Build the concatenated string in the EXACT order Paymob specifies
             String data = String.valueOf(t.getAmountCents())
                     + safeStr(t.getCreatedAt())
                     + safeStr(t.getCurrency())
@@ -356,29 +448,31 @@ public class PaymobService {
                     + t.isSuccess();
 
             String calculated = hmacSha512(data, paymobConfig.getHmacSecret());
+
+            // Use equalsIgnoreCase — Paymob may return uppercase or lowercase hex
             boolean valid = calculated.equalsIgnoreCase(receivedHmac);
 
             if (!valid) {
-                log.warn("[Paymob] HMAC mismatch — expected: {}, received: {}", calculated, receivedHmac);
+                log.warn("[Paymob] HMAC mismatch — calculated: {}, received: {}", calculated, receivedHmac);
             }
             return valid;
 
         } catch (Exception e) {
-            log.error("[Paymob] HMAC verification error", e);
+            log.error("[Paymob] HMAC verification threw an exception", e);
             return false;
         }
     }
 
-    /** Computes HMAC-SHA512 and returns it as a lowercase hex string */
+    /** Computes HMAC-SHA512 and returns the result as a lowercase hex string */
     private String hmacSha512(String data, String secret) throws Exception {
-        Mac mac = Mac.getInstance("HmacSHA512");
+        Mac mac = Mac.getInstance(HMAC_ALGORITHM);
         SecretKeySpec keySpec = new SecretKeySpec(
-            secret.getBytes(StandardCharsets.UTF_8), "HmacSHA512"
+            secret.getBytes(StandardCharsets.UTF_8), HMAC_ALGORITHM
         );
         mac.init(keySpec);
         byte[] rawHmac = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
 
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(rawHmac.length * 2);
         for (byte b : rawHmac) {
             sb.append(String.format("%02x", b));
         }
