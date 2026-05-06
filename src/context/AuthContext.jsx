@@ -2,6 +2,10 @@ import React, { createContext, useCallback, useContext, useMemo, useState } from
 
 const STORAGE_KEY = 'packora_user_auth';
 
+/**
+ * Derives a display name from an email address.
+ * e.g. "john.doe@mail.com" → "John Doe"
+ */
 export function emailToDisplayName(email) {
   const local = String(email || '').trim().split('@')[0] || 'User';
   const words = local.split(/[._-]+/).filter(Boolean);
@@ -11,16 +15,21 @@ export function emailToDisplayName(email) {
   return titled || local;
 }
 
+/**
+ * Reads the stored auth data from localStorage.
+ * Returns { token, id, username, email, role } or null.
+ */
 function readStoredUser() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (parsed && typeof parsed.email === 'string' && typeof parsed.displayName === 'string') {
+    // Must have at minimum a token and email to be valid
+    if (parsed && typeof parsed.token === 'string' && typeof parsed.email === 'string') {
       return parsed;
     }
   } catch {
-    /* ignore */
+    /* ignore corrupt data */
   }
   return null;
 }
@@ -30,15 +39,27 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => readStoredUser());
 
-  const login = useCallback((email, options = {}) => {
-    const em = String(email || '').trim().toLowerCase();
-    const displayName =
-      typeof options.displayName === 'string' && options.displayName.trim()
-        ? options.displayName.trim()
-        : emailToDisplayName(em);
-    const next = { email: em, displayName };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    setUser(next);
+  /**
+   * Log in by storing the full JWT response data.
+   *
+   * @param {Object} authData - The response from POST /api/auth/login
+   * @param {string} authData.token - JWT token
+   * @param {number} authData.id - User ID
+   * @param {string} authData.username - Username
+   * @param {string} authData.email - Email
+   * @param {string} authData.role - Role (e.g. "ROLE_BUSINESS_OWNER", "ROLE_ADMIN")
+   */
+  const login = useCallback((authData) => {
+    const userData = {
+      token: authData.token,
+      id: authData.id,
+      username: authData.username,
+      email: authData.email,
+      role: authData.role,
+      displayName: authData.username || emailToDisplayName(authData.email),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+    setUser(userData);
   }, []);
 
   const logout = useCallback(() => {
@@ -46,14 +67,35 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  /**
+   * Returns the stored JWT token, or null if not logged in.
+   */
+  const getToken = useCallback(() => {
+    return user?.token || null;
+  }, [user]);
+
+  /**
+   * Check if the current user has a specific role.
+   * e.g. hasRole('ADMIN') checks for 'ROLE_ADMIN'
+   */
+  const hasRole = useCallback((roleName) => {
+    if (!user?.role) return false;
+    // Support both "ADMIN" and "ROLE_ADMIN" input
+    const normalized = roleName.startsWith('ROLE_') ? roleName : `ROLE_${roleName}`;
+    return user.role === normalized;
+  }, [user]);
+
   const value = useMemo(
     () => ({
       user,
-      isLoggedIn: !!user,
+      isLoggedIn: !!user?.token,
+      isAdmin: user?.role === 'ROLE_ADMIN',
       login,
       logout,
+      getToken,
+      hasRole,
     }),
-    [user, login, logout]
+    [user, login, logout, getToken, hasRole]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

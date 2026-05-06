@@ -12,6 +12,7 @@ import './PackoraChatbot.css';
 
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
+import { apiFetch } from '../../utils/api';
 
 export default function PackoraChatbot() {
   const navigate = useNavigate();
@@ -64,19 +65,12 @@ export default function PackoraChatbot() {
       setIsTyping(true);
       
       try {
-        const token = localStorage.getItem('token');
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
+        const data = await apiFetch('/api/chatbot/ask', {
+          method: 'POST',
+          body: JSON.stringify({ message: text }),
+        });
         
-        const response = await axios.post(
-          'http://localhost:8080/api/chatbot/ask',
-          { message: text },
-          { headers }
-        );
-        
-        addMessage('bot', response.data.reply);
+        addMessage('bot', data.reply);
       } catch (error) {
         console.error("Chatbot API Error:", error);
         addMessage('bot', 'Sorry, I am having trouble connecting to my servers right now.');

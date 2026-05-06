@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useStore } from '../../../store/useStore'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../../context/CartContext'
+import { apiFetch } from '../../../utils/api'
 
 export default function Navbar() {
   const { undo, redo, history, historyIndex, designs, boxDimensions, material, quantity, price } = useStore()
@@ -20,14 +21,10 @@ export default function Navbar() {
     setSaving(true)
     setSaveError(false)
     try {
-      const response = await fetch('/api/designs', {
+      await apiFetch('/api/designs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ designs, boxDimensions, material, quantity }),
       })
-      if (!response.ok) {
-        throw new Error(`Save failed with status ${response.status}`)
-      }
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     } catch (e) {

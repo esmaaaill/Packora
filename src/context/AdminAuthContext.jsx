@@ -1,23 +1,28 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-
-const STORAGE_KEY = 'packora_admin_auth';
+import React, { createContext, useCallback, useContext, useMemo } from 'react';
+import { useAuth } from './AuthContext';
 
 const AdminAuthContext = createContext(null);
 
-export const ADMIN_EMAIL = 'admin@packora.com';
-
+/**
+ * AdminAuthProvider — derives admin status from the JWT role
+ * stored in AuthContext. No more hardcoded email or sessionStorage flag.
+ */
 export function AdminAuthProvider({ children }) {
-  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem(STORAGE_KEY) === '1');
+  const { isAdmin: isAdminRole, logout } = useAuth();
 
+  // Admin status is derived from the JWT role — not a manual flag
+  const isAdmin = isAdminRole;
+
+  // loginAdmin is now a no-op — admin status comes from the JWT
   const loginAdmin = useCallback(() => {
-    sessionStorage.setItem(STORAGE_KEY, '1');
-    setIsAdmin(true);
+    // Admin login happens through the normal login flow.
+    // The role is set by the server in the JWT response.
   }, []);
 
   const logoutAdmin = useCallback(() => {
-    sessionStorage.removeItem(STORAGE_KEY);
-    setIsAdmin(false);
-  }, []);
+    // Log out the whole session
+    logout();
+  }, [logout]);
 
   const value = useMemo(
     () => ({ isAdmin, loginAdmin, logoutAdmin }),

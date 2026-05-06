@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Package, User, Building2, Mail, Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './SignUp.css';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE } from '../../utils/api';
 
 export default function SignUp() {
   const [fullName, setFullName] = useState('');
@@ -12,6 +14,9 @@ export default function SignUp() {
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,31 +28,53 @@ export default function SignUp() {
       return;
     }
 
+    setLoading(true);
+
     try {
-      const response = await fetch('http://localhost:8080/api/auth/signup', {
+      // 1. Register the user
+      const signupRes = await fetch(`${API_BASE}/api/auth/signup`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: fullName,
           email: email,
           password: password,
           companyName: businessName,
-          phone: '', // Optional, or you could add a phone state
+          phone: '',
         }),
       });
 
-      const data = await response.json();
+      const signupData = await signupRes.json();
 
-      if (!response.ok) {
-        setErrorMsg(data.message || 'Signup failed');
+      if (!signupRes.ok) {
+        setErrorMsg(signupData.message || 'Signup failed');
+        setLoading(false);
+        return;
+      }
+
+      // 2. Auto-login after successful signup
+      const loginRes = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: email, // Backend accepts email in the username field
+          password: password,
+        }),
+      });
+
+      if (loginRes.ok) {
+        const loginData = await loginRes.json();
+        login(loginData);
+        navigate('/HomePage');
       } else {
-        setSuccessMsg(data.message || 'User registered successfully!');
-        // Optionally redirect or clear form here
+        // Signup succeeded but auto-login failed — redirect to login page
+        setSuccessMsg('Account created! Please sign in.');
+        setTimeout(() => navigate('/login'), 1500);
       }
     } catch (error) {
       setErrorMsg('Could not connect to the server. Please try again later.');
+    } finally {
+      setLoading(false);
     }
   };
 

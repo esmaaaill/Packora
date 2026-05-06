@@ -20,7 +20,7 @@ import {
 import Navbar from '../Navbar/Navbar';
 import './Support.css';
 import Footer from '../Footer/Footer';
-import axios from 'axios';
+import { apiFetch } from '../../utils/api';
 
 
 const SUPPORT_TABS = [
@@ -112,23 +112,16 @@ function ContactUs({ submitted, setSubmitted, setActiveTab }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      await axios.post(
-        'http://localhost:8080/api/support/tickets',
-        {
+      await apiFetch('/api/support/tickets', {
+        method: 'POST',
+        body: JSON.stringify({
           contactName: formData.fullName,
           contactEmail: formData.email,
           subject: formData.subject,
           message: formData.message,
           category: 'contact'
-        },
-        { headers }
-      );
+        }),
+      });
       
       setSubmitted(true);
     } catch (error) {
@@ -392,25 +385,18 @@ function ReportIssueForm({ submitted, setSubmitted, onBack, setActiveTab, setRep
     if (!formData.category) return;
     
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await axios.post(
-        'http://localhost:8080/api/support/tickets',
-        {
+      const data = await apiFetch('/api/support/tickets', {
+        method: 'POST',
+        body: JSON.stringify({
           subject: formData.subject,
           message: formData.description,
           category: formData.category,
           priority: formData.priority,
           orderReference: formData.orderId || formData.transactionId
-        },
-        { headers }
-      );
+        }),
+      });
       
-      setTicketId(`TICK-${response.data.id}`);
+      setTicketId(`TICK-${data.id}`);
       setSubmitted(true);
     } catch (error) {
       console.error('Error submitting issue:', error);

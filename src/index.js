@@ -94,17 +94,16 @@ let router = createBrowserRouter([
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <AdminAuthProvider>
-    <AllData>
-      <CartProvider>
-        <ProfileProvider>
-          <AuthProvider>
+  <AuthProvider>
+    <AdminAuthProvider>
+      <AllData>
+        <CartProvider>
+          <ProfileProvider>
             <ScrollToTop smooth />
             <RouterProvider router={router} />
-          </AuthProvider>
-        </ProfileProvider>
-      </CartProvider>
-    </AllData>
-  </AdminAuthProvider>
-
+          </ProfileProvider>
+        </CartProvider>
+      </AllData>
+    </AdminAuthProvider>
+  </AuthProvider>
 );

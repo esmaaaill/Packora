@@ -2,36 +2,65 @@ import React, { useState } from 'react';
 import { Package, Mail, Lock } from 'lucide-react';
 import './LoginPage.css';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAdminAuth, ADMIN_EMAIL } from '../../context/AdminAuthContext';
-import { useAuth, emailToDisplayName } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import { useProfile } from '../../context/ProfileContext';
+import { API_BASE } from '../../utils/api';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { loginAdmin } = useAdminAuth();
   const { login } = useAuth();
   const { setAccountProfile } = useProfile();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const em = email.trim().toLowerCase();
-    if (em === ADMIN_EMAIL && password.length > 0) {
-      loginAdmin();
-      login(em, { displayName: 'Admin' });
-      navigate('/admin');
-      return;
+    setErrorMsg('');
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: email.trim(), // Backend accepts email in the username field
+          password: password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setErrorMsg(data.message || 'Invalid email or password.');
+        setLoading(false);
+        return;
+      }
+
+      // data = { token, type, id, username, email, role }
+      login(data);
+
+      // Update profile context with user info
+      setAccountProfile((prev) => ({
+        ...prev,
+        email: data.email,
+        fullName: data.username,
+      }));
+
+      // Route based on role from the server
+      if (data.role === 'ROLE_ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/HomePage');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrorMsg('Could not connect to the server. Please try again later.');
+    } finally {
+      setLoading(false);
     }
-    const displayName = emailToDisplayName(em);
-    login(em);
-    setAccountProfile((prev) => ({
-      ...prev,
-      email: em,
-      fullName: displayName,
-    }));
-    navigate('/');
   };
 
   return (
@@ -75,6 +104,22 @@ export default function LoginPage() {
           }}
         >
           <form onSubmit={handleSubmit}>
+            {/* Error message */}
+            {errorMsg && (
+              <div style={{
+                color: '#dc2626',
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 8,
+                padding: '12px 16px',
+                fontSize: 14,
+                marginBottom: 20,
+                textAlign: 'center',
+              }}>
+                {errorMsg}
+              </div>
+            )}
+
             {/* Email */}
             <div className="login-field" style={{ marginBottom: 20 }}>
               <label
@@ -99,6 +144,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 required
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -136,6 +182,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                disabled={loading}
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -197,20 +244,22 @@ export default function LoginPage() {
             {/* Sign In button */}
             <button
               type="submit"
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: '12px 16px',
-                backgroundColor: 'var(--primary)',
+                backgroundColor: loading ? 'var(--muted)' : 'var(--primary)',
                 color: 'var(--primary-foreground)',
                 border: 'none',
                 borderRadius: 8,
                 fontSize: 16,
                 fontWeight: 600,
-                cursor: 'pointer',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
               }}
               className="login-button"
             >
-              Sign In
+              {loading ? 'Signing in...' : 'Sign In'}
             </button>
 
             {/* Create account */}
