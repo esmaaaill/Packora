@@ -86,7 +86,7 @@ export default function Catalog() {
                   <h3 className="catalog-card-title">{product.name}</h3>
                   <p className="catalog-card-desc">{product.description}</p>
                   <p className="catalog-card-price">
-                    Starting at ${product.price.toFixed(2)}
+                    Starting at EGP{product.price.toFixed(2)}
                   </p>
                   <p className="catalog-card-min">
                     Min. order: {product.minOrder} units
