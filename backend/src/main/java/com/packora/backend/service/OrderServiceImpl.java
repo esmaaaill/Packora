@@ -257,14 +257,34 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private OrderItemResponse toOrderItemResponse(OrderItem item) {
+        Double price = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
+        Integer qty = item.getQuantity() != null ? item.getQuantity() : 0;
+        
+        Long productId = null;
+        String productName = "Unknown Product";
+        String productImageUrl = null;
+
+        try {
+            if (item.getProduct() != null) {
+                productId = item.getProduct().getId();
+                productName = item.getProduct().getName();
+                productImageUrl = item.getProduct().getImageUrl();
+            }
+        } catch (jakarta.persistence.EntityNotFoundException | org.hibernate.ObjectNotFoundException e) {
+            // Product was deleted from the database or is missing
+            productId = null;
+            productName = "Unknown Product (Deleted)";
+            productImageUrl = null;
+        }
+
         return OrderItemResponse.builder()
                 .id(item.getId())
-                .productId(item.getProduct().getId())
-                .productName(item.getProduct().getName())
-                .productImageUrl(item.getProduct().getImageUrl())
-                .quantity(item.getQuantity())
-                .unitPrice(item.getUnitPrice())
-                .lineTotal(Math.round(item.getUnitPrice() * item.getQuantity() * 100.0) / 100.0)
+                .productId(productId)
+                .productName(productName)
+                .productImageUrl(productImageUrl)
+                .quantity(qty)
+                .unitPrice(price)
+                .lineTotal(Math.round(price * qty * 100.0) / 100.0)
                 .selectedSize(item.getSelectedSize())
                 .selectedMaterial(item.getSelectedMaterial())
                 .build();

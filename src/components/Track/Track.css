@@ -430,11 +430,19 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--card);
+  border: 2px solid var(--border);
+  color: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s;
+}
+
+.track-timeline-dot.completed {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .track-timeline-content {

@@ -223,3 +223,18 @@ export const orderApi = {
   /** PUT /api/orders/:id/cancel – cancel an order */
   cancel: (id) => apiFetch(`/api/orders/${id}/cancel`, { method: 'PUT' }).then(normalizeOrder),
 };
+
+export const shipmentApi = {
+  /** GET /api/shipments/order/:orderId - Get tracking details/timeline for an order */
+  getByOrderId: (orderId) => apiFetch(`/api/shipments/order/${orderId}`),
+
+  /** GET /api/shipments/:id - Get shipment by ID */
+  getById: (id) => apiFetch(`/api/shipments/${id}`),
+
+  /** PUT /api/shipments/:id/status - Update shipment status */
+  updateStatus: (id, status) => apiFetch(`/api/shipments/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  /** PUT /api/shipments/:id/assign-partner - Assign shipping partner */
+  assignPartner: (id, partnerId) => apiFetch(`/api/shipments/${id}/assign-partner`, { method: 'PUT', body: JSON.stringify({ partnerId }) })
+};
+

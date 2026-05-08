@@ -13,7 +13,7 @@ import {
   Loader2,
   XCircle,
 } from 'lucide-react';
-import { orderApi } from '../../utils/api';
+import { orderApi, shipmentApi } from '../../utils/api';
 
 import Navbar from '../Navbar/Navbar';
 import './Track.css';
@@ -28,40 +28,18 @@ const statusConfig = {
   cancelled: { label: 'Cancelled', class: 'status-cancelled', Icon: AlertCircle },
 };
 
-// Generate timeline and tracking from order
-function getOrderTracking(order) {
-  const idNum = order.id.replace(/\D/g, '') || '0000';
-  const n = parseInt(idNum, 10) || 0;
-  const a = String(Math.abs(n % 10000)).padStart(4, '0');
-  const b = String(Math.abs(Math.floor(n / 100) % 10000)).padStart(4, '0');
-  const c = String(Math.abs(Math.floor(n / 10000) % 10000)).padStart(4, '0');
-  const trackingNumber = `TRK-${a}-${b}-${c}`;
-  const baseDate = new Date(order.rawDate || order.date || new Date());
-  const steps = [
-    { key: 'placed', label: 'Order Placed', date: baseDate, time: '10:30 AM' },
-    { key: 'processing', label: 'Processing', date: baseDate, time: '2:15 PM' },
-    { key: 'shipped', label: 'Shipped', date: new Date(baseDate.getTime() + 86400000), time: '8:00 AM' },
-    { key: 'out', label: 'Out for Delivery', date: new Date(baseDate.getTime() + 172800000), time: '6:30 AM' },
-    { key: 'delivered', label: 'Delivered', date: new Date(baseDate.getTime() + 172800000), time: '2:45 PM' },
-  ];
-  const statusOrder = ['placed', 'processing', 'shipped', 'out', 'delivered'];
-  const statusIdx = statusOrder.indexOf(order.status);
-  const timeline = steps.slice(0, statusIdx === -1 ? 2 : statusIdx + 1);
-  const location =
-    order.status === 'delivered'
-      ? 'Delivered to Business Address'
-      : order.status === 'shipped'
-        ? 'In Transit'
-        : order.status === 'processing' || order.status === 'pending'
-          ? 'Processing at Warehouse'
-          : '—';
-  const deliveredDate = order.status === 'delivered' ? steps[4] : null;
-  return { trackingNumber, timeline, location, deliveredDate };
-}
-
-function formatTimelineDate(d, time) {
+function formatBackendDateTime(isoString) {
+  if (!isoString) return { date: '—', time: '' };
+  const d = new Date(isoString);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${time}`;
+  const dateStr = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  let hours = d.getHours();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; 
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  const timeStr = `${hours}:${minutes} ${ampm}`;
+  return { date: dateStr, time: timeStr };
 }
 
 export default function Track() {
@@ -72,6 +50,9 @@ export default function Track() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  
+  const [selectedShipment, setSelectedShipment] = useState(null);
+  const [shipmentLoading, setShipmentLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -96,15 +77,36 @@ export default function Track() {
     return () => { cancelled = true; };
   }, [location.state]);
 
+  useEffect(() => {
+    if (!selectedOrder || !selectedOrder.rawId) {
+      setSelectedShipment(null);
+      return;
+    }
+    let cancelled = false;
+    setShipmentLoading(true);
+    shipmentApi.getByOrderId(selectedOrder.rawId)
+      .then(data => {
+        if (!cancelled) setSelectedShipment(data);
+      })
+      .catch(err => {
+        if (!cancelled) {
+          console.error("Failed to load shipment:", err);
+          setSelectedShipment(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setShipmentLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [selectedOrder]);
+
   const filteredOrders = useMemo(() => {
     if (!searchQuery.trim()) return orders;
     const q = searchQuery.toLowerCase();
     return orders.filter((o) => {
-      const tracking = getOrderTracking(o).trackingNumber.toLowerCase();
       return (
         o.id.toLowerCase().includes(q) ||
-        o.product.toLowerCase().includes(q) ||
-        tracking.includes(q)
+        o.product.toLowerCase().includes(q)
       );
     });
   }, [searchQuery, orders]);
@@ -237,67 +239,81 @@ export default function Track() {
                     <span className="track-detail-label">Order Date</span>
                     <span className="track-detail-value">{selectedOrder.date}</span>
                   </p>
-                  {getOrderTracking(selectedOrder).deliveredDate && (
-                    <p className="track-detail-row">
-                      <span className="track-detail-label">Delivered</span>
-                      <span className="track-detail-value">
-                        {formatTimelineDate(
-                          getOrderTracking(selectedOrder).deliveredDate.date,
-                          getOrderTracking(selectedOrder).deliveredDate.time
-                        )}
-                      </span>
-                    </p>
-                  )}
-
-                  <div className="track-tracking-wrap">
-                    <span className="track-detail-label">Tracking Number</span>
-                    <div className="track-tracking-box">
-                      <span className="track-tracking-value">
-                        {getOrderTracking(selectedOrder).trackingNumber}
-                      </span>
-                      <button
-                        type="button"
-                        className="track-copy-btn"
-                        onClick={() =>
-                          handleCopyTracking(
-                            getOrderTracking(selectedOrder).trackingNumber
-                          )
-                        }
-                      >
-                        <Copy size={14} />
-                        Copy
-                      </button>
+                  
+                  {shipmentLoading ? (
+                    <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--muted)' }}>
+                      <Loader2 size={24} className="profile-spinner" style={{ margin: '0 auto 1rem' }} />
+                      <p>Loading tracking information...</p>
                     </div>
-                  </div>
-
-                  <div className="track-location-wrap">
-                    <span className="track-detail-label">Current Location</span>
-                    <p className="track-location">
-                      <MapPin size={18} />
-                      {getOrderTracking(selectedOrder).location}
-                    </p>
-                  </div>
-
-                  <div className="track-timeline-wrap">
-                    <span className="track-detail-label">Order Placed</span>
-                    <div className="track-timeline">
-                      {getOrderTracking(selectedOrder).timeline.map((step) => (
-                        <div key={step.key} className="track-timeline-item">
-                          <span className="track-timeline-dot">
-                            <Check size={14} />
+                  ) : selectedShipment ? (
+                    <>
+                      {selectedShipment.deliveryDate && (
+                        <p className="track-detail-row">
+                          <span className="track-detail-label">Expected Delivery</span>
+                          <span className="track-detail-value">
+                            {formatBackendDateTime(selectedShipment.deliveryDate).date}
                           </span>
-                          <div className="track-timeline-content">
-                            <span className="track-timeline-label">
-                              {step.label}
-                            </span>
-                            <span className="track-timeline-date">
-                              {formatTimelineDate(step.date, step.time)}
-                            </span>
-                          </div>
+                        </p>
+                      )}
+
+                      <div className="track-tracking-wrap">
+                        <span className="track-detail-label">Tracking Number</span>
+                        <div className="track-tracking-box">
+                          <span className="track-tracking-value">
+                            {selectedShipment.trackingNumber || 'Pending Assignment'}
+                          </span>
+                          {selectedShipment.trackingNumber && (
+                            <button
+                              type="button"
+                              className="track-copy-btn"
+                              onClick={() => handleCopyTracking(selectedShipment.trackingNumber)}
+                            >
+                              <Copy size={14} />
+                              Copy
+                            </button>
+                          )}
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="track-location-wrap">
+                        <span className="track-detail-label">Current Location</span>
+                        <p className="track-location">
+                          <MapPin size={18} />
+                          {selectedShipment.currentLocation || 'Processing Center'}
+                        </p>
+                      </div>
+
+                      <div className="track-timeline-wrap">
+                        <span className="track-detail-label">Tracking Timeline</span>
+                        <div className="track-timeline">
+                          {(selectedShipment.timeline || []).map((step, idx) => {
+                            const dt = formatBackendDateTime(step.occurredAt);
+                            return (
+                              <div key={idx} className="track-timeline-item">
+                                <span className={`track-timeline-dot ${step.completed ? 'completed' : ''}`}>
+                                  <Check size={14} />
+                                </span>
+                                <div className="track-timeline-content">
+                                  <span className="track-timeline-label" style={{ opacity: step.completed ? 1 : 0.6 }}>
+                                    {step.label}
+                                  </span>
+                                  {step.occurredAt && (
+                                    <span className="track-timeline-date">
+                                      {dt.date} {dt.time}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--muted)' }}>
+                      <p>Tracking information is not available yet.</p>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="track-need-help">
