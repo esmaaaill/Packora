@@ -133,31 +133,6 @@ export default function HomePage() {
 
         <div className="home-grid">
           {/* Quick Actions */}
-          <section className="quick-actions">
-            <h2>Quick Actions</h2>
-            <Link to="/Catalog" className="action-btn primary">
-              <Box size={18} />
-              Browse Catalog
-            </Link>
-            <Link to="/Cart" className="action-btn">
-              <ShoppingCart size={18} />
-              View Cart
-            </Link>
-            <Link to="/Track" className="action-btn">
-              <Truck size={18} />
-              Track Orders
-            </Link>
-            <Link to="/BulkOrder" className="action-btn">
-              <UploadCloud size={18} />
-              Bulk Upload
-            </Link>
-            <Link to="/Support" className="action-btn">
-              <HelpCircle size={18} />
-              Get Support
-            </Link>
-          </section>
-
-          {/* Recent Orders Widget */}
           <section className="recent-orders">
             <div className="section-header">
               <h2>Recent Orders</h2>
@@ -190,6 +165,32 @@ export default function HomePage() {
               )}
             </div>
           </section>
+          <section className="quick-actions">
+            <h2>Quick Actions</h2>
+            <Link to="/Catalog" className="action-btn primary">
+              <Box size={18} />
+              Browse Catalog
+            </Link>
+            <Link to="/Cart" className="action-btn">
+              <ShoppingCart size={18} />
+              View Cart
+            </Link>
+            <Link to="/Track" className="action-btn">
+              <Truck size={18} />
+              Track Orders
+            </Link>
+            <Link to="/BulkOrder" className="action-btn">
+              <UploadCloud size={18} />
+              Bulk Upload
+            </Link>
+            <Link to="/Support" className="action-btn">
+              <HelpCircle size={18} />
+              Get Support
+            </Link>
+          </section>
+
+          {/* Recent Orders Widget */}
+          
         </div>
 
         {/* Browse by Category - from real API data */}
