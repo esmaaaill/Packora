@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { parseAmount } from '../utils/adminFormat';
 import { userApi, productApi, orderApi, adminAnalyticsApi } from '../utils/api';
 
 const AdminContext = createContext(null);
