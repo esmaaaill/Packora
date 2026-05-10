@@ -38,7 +38,7 @@
 ### Backend
 - **Framework:** Spring Boot (Java 17)
 - **Data Persistence:** Spring Data JPA / Hibernate
-- **Database:** PostgreSQL
+- **Database:** PostgreSQL / Supabase Cloud Storage
 - **Build Tool:** Maven
 - **Boilerplate Reduction:** Lombok
 
