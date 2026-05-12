@@ -255,7 +255,7 @@ export const cartApi = {
   getCart: () => apiFetch('/api/cart').then(normalizeCart),
 
   /** POST /api/cart/items — add an item to cart */
-  addItem: (productId, quantity, selectedSize, selectedMaterial) =>
+  addItem: (productId, quantity, selectedSize, selectedMaterial, customBoxConfigId = null) =>
     apiFetch('/api/cart/items', {
       method: 'POST',
       body: JSON.stringify({
@@ -263,6 +263,7 @@ export const cartApi = {
         quantity,
         selectedSize: selectedSize || null,
         selectedMaterial: selectedMaterial || null,
+        customBoxConfigId: customBoxConfigId ? Number(customBoxConfigId) : null,
       }),
     }).then(normalizeCart),
 
@@ -391,4 +392,65 @@ export const adminAnalyticsApi = {
   /** GET /api/admin/analytics/top-products?limit={l} — (ADMIN only) */
   getTopProducts: (limit = 5) =>
     apiFetch(`/api/admin/analytics/top-products?limit=${limit}`),
+};
+
+// ── Designs API (Partner Assets) ──────────────────────────────────────
+
+export const designApi = {
+  /** GET /api/designs - List all designs */
+  getAll: () => apiFetch('/api/designs'),
+
+  /** GET /api/designs/{id} - Get design by ID */
+  getById: (id) => apiFetch(`/api/designs/${id}`),
+
+  /** POST /api/designs - Create design */
+  create: (partnerId, logoFile, artworkFile, previewUrl) => {
+    const formData = new FormData();
+    formData.append('partnerId', partnerId);
+    if (logoFile) formData.append('logoFile', logoFile);
+    if (artworkFile) formData.append('artworkFile', artworkFile);
+    if (previewUrl) formData.append('previewUrl', previewUrl);
+    
+    return apiFetch('/api/designs', {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
+  /** PUT /api/designs/{id} - Update design files/metadata */
+  update: (id, logoFile, artworkFile, previewUrl) => {
+    const formData = new FormData();
+    if (logoFile) formData.append('logoFile', logoFile);
+    if (artworkFile) formData.append('artworkFile', artworkFile);
+    if (previewUrl) formData.append('previewUrl', previewUrl);
+
+    return apiFetch(`/api/designs/${id}`, {
+      method: 'PUT',
+      body: formData,
+    });
+  },
+
+  /** DELETE /api/designs/{id} - Delete design and its files */
+  delete: (id) => apiFetch(`/api/designs/${id}`, { method: 'DELETE' }),
+};
+
+// ── Custom Box Config API (End-User 3D Editor) ────────────────────────
+
+export const customBoxConfigApi = {
+  /** POST /api/custom-boxes - Create new config draft */
+  create: (configurationJson, isSavedDraft = false) => 
+    apiFetch('/api/custom-boxes', {
+      method: 'POST',
+      body: JSON.stringify({ configurationJson, isSavedDraft })
+    }),
+
+  /** PUT /api/custom-boxes/{id} - Update existing config draft */
+  update: (id, configurationJson, isSavedDraft = false) => 
+    apiFetch(`/api/custom-boxes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ configurationJson, isSavedDraft })
+    }),
+
+  /** GET /api/custom-boxes/me - Get my saved drafts */
+  getMyDrafts: () => apiFetch('/api/custom-boxes/me'),
 };
