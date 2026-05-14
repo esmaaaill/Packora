@@ -14,14 +14,27 @@ export function ProfileProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Local-only state (no backend support yet)
-  const [savedAddresses, setSavedAddresses] = useState([]);
-  const [notificationPrefs, setNotificationPrefs] = useState({
-    orderUpdates: true,
-    shippingAlerts: true,
-    promotions: false,
-    newsletter: false,
+  // Local state persisted to localStorage
+  const [savedAddresses, setSavedAddresses] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('packora_saved_addresses')) || []; } catch { return []; }
   });
+  const [notificationPrefs, setNotificationPrefs] = useState(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('packora_notification_prefs'));
+      return stored || { orderUpdates: true, shippingAlerts: true, promotions: false, newsletter: false };
+    } catch {
+      return { orderUpdates: true, shippingAlerts: true, promotions: false, newsletter: false };
+    }
+  });
+
+  /* ── Sync local state to localStorage ─────────────────────────── */
+  useEffect(() => {
+    try { localStorage.setItem('packora_saved_addresses', JSON.stringify(savedAddresses)); } catch {}
+  }, [savedAddresses]);
+
+  useEffect(() => {
+    try { localStorage.setItem('packora_notification_prefs', JSON.stringify(notificationPrefs)); } catch {}
+  }, [notificationPrefs]);
 
   /* ── Fetch profile on mount / login ───────────────────────────── */
   useEffect(() => {

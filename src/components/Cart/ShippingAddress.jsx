@@ -8,21 +8,26 @@ import './ShippingAddress.css';
 const TAX_RATE = 0.08;
 
 export default function ShippingAddress() {
-  const { 
-    shippingAddress, 
-    setShippingAddress, 
-    setCheckoutStep, 
+  const {
+    shippingAddress,
+    setShippingAddress,
+    setCheckoutStep,
     cartItems,
     setIframeUrl,
     setCurrentOrderId
   } = useCart();
-  
-  const [form, setForm] = useState(shippingAddress);
+
+  const [form, setForm] = useState({ email: '', ...shippingAddress }); // email pre-filled from localStorage via context
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleChange = (e) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+      setShippingAddress(updated); // sync to context → localStorage immediately
+      return updated;
+    });
   };
 
   const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
@@ -33,7 +38,7 @@ export default function ShippingAddress() {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
-    setShippingAddress(form);
+    // shippingAddress is already in sync with form via handleChange
 
     try {
       // 1. Create Order
@@ -47,14 +52,14 @@ export default function ShippingAddress() {
 
       const items = cartItems.map((item) => ({
         productId: parseInt(item.productId, 10),
-        quantity:  item.quantity,
+        quantity: item.quantity,
         unitPrice: item.price,
-        size:      item.size     || null,
-        material:  item.material || null,
+        size: item.size || null,
+        material: item.material || null,
       }));
 
       const order = await orderApi.create({ shippingAddress: addressString, items });
-      const orderId     = order.rawId;
+      const orderId = order.rawId;
       const totalAmount = order.rawAmount;
 
       setCurrentOrderId(orderId);
@@ -64,27 +69,27 @@ export default function ShippingAddress() {
       const lastName = rest.join(' ') || 'NA';
 
       const billingData = {
-        first_name:      firstName,
-        last_name:       lastName,
-        email:           form.email || 'na@na.com',
-        phone_number:    form.phone || 'NA',
-        street:          form.street || 'NA',
-        city:            form.city   || 'NA',
-        country:         'EG',
-        apartment:       'NA',
-        floor:           'NA',
-        building:        'NA',
+        first_name: firstName,
+        last_name: lastName,
+        email: form.email || 'na@na.com',
+        phone_number: form.phone || 'NA',
+        street: form.street || 'NA',
+        city: form.city || 'NA',
+        country: 'EG',
+        apartment: 'NA',
+        floor: 'NA',
+        building: 'NA',
         shipping_method: 'NA',
-        postal_code:     form.zip    || 'NA',
-        state:           form.state  || 'NA',
+        postal_code: form.zip || 'NA',
+        state: form.state || 'NA',
       };
 
       const paymentResp = await paymentApi.initiate(orderId, totalAmount, billingData);
-      
+
       // 3. Store iframe URL and go to payment step
       setIframeUrl(paymentResp.iframeUrl);
       setCheckoutStep('payment');
-      
+
     } catch (err) {
       console.error("Order creation failed:", err);
       setError(err.message || 'Failed to initialize payment. Please try again.');
@@ -113,7 +118,7 @@ export default function ShippingAddress() {
           <MapPin size={20} />
           Shipping Address
         </h2>
-        
+
         {error && (
           <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px' }}>
             {error}
@@ -182,6 +187,17 @@ export default function ShippingAddress() {
             />
           </div>
           <div className="shipping-row full">
+            <label>Email Address *</label>
+            <input
+              type="email"
+              name="email"
+              value={form.email || ''}
+              onChange={handleChange}
+              placeholder="you@example.com"
+              required
+            />
+          </div>
+          <div className="shipping-row full">
             <label>Phone Number *</label>
             <input
               type="tel"
@@ -203,7 +219,7 @@ export default function ShippingAddress() {
         <div className="shipping-summary-rows">
           <div className="shipping-summary-row">
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>EGP {subtotal.toFixed(2)}</span>
           </div>
           <div className="shipping-summary-row">
             <span>Shipping</span>
@@ -211,12 +227,12 @@ export default function ShippingAddress() {
           </div>
           <div className="shipping-summary-row">
             <span>Tax (8%)</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>EGP {tax.toFixed(2)}</span>
           </div>
         </div>
         <div className="shipping-summary-total">
           <span>Total</span>
-          <span>${total.toFixed(2)}</span>
+          <span>EGP {total.toFixed(2)}</span>
         </div>
         <p className="shipping-summary-items">
           {cartItems.map((i) => `${i.quantity}x ${i.name}`).join(', ')}

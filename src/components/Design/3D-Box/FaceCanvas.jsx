@@ -68,14 +68,21 @@ export default function FaceCanvas({ face, onTextureReady }) {
 
         if (el.type === 'text') {
           ctx.font = `${el.fontWeight} ${el.fontSize}px ${el.fontFamily}, sans-serif`
-          ctx.fillStyle = el.color
           ctx.textAlign = el.textAlign
           ctx.textBaseline = 'top'
-          const lines = el.content.split('\n')
-          lines.forEach((line, i) => {
+          
+          if (!el.content) {
+            ctx.fillStyle = 'rgba(150, 150, 150, 0.5)'
             const x = el.textAlign === 'left' ? 0 : el.textAlign === 'right' ? el.width : el.width / 2
-            ctx.fillText(line, x, i * el.fontSize * 1.3)
-          })
+            ctx.fillText('make your text here', x, 0)
+          } else {
+            ctx.fillStyle = el.color
+            const lines = el.content.split('\n')
+            lines.forEach((line, i) => {
+              const x = el.textAlign === 'left' ? 0 : el.textAlign === 'right' ? el.width : el.width / 2
+              ctx.fillText(line, x, i * el.fontSize * 1.3)
+            })
+          }
         } else if (el.type === 'image') {
           const img = imgCache.current.get(el.content)
           if (img) {

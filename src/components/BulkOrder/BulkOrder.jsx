@@ -8,11 +8,23 @@ import Step3Review from './Step3Review';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { orderApi, paymentApi } from '../../utils/api';
 
 export default function BulkOrder() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
-  const { clearCart, bulkExcelData, setBulkExcelData, bulkWarehouseData, setBulkWarehouseData } = useCart();
+  const [error, setError] = useState(null);
+  const { 
+    cartItems, 
+    setIframeUrl, 
+    setCheckoutStep, 
+    setCurrentOrderId, 
+    clearCart, 
+    bulkExcelData, 
+    setBulkExcelData, 
+    bulkWarehouseData, 
+    setBulkWarehouseData 
+  } = useCart();
   const navigate = useNavigate();
 
   const handleNextStep = () => {
@@ -28,18 +40,66 @@ export default function BulkOrder() {
     handleNextStep();
   };
 
-  const handleConfirmOrder = () => {
-    // Clear cart and show success
-    clearCart();
-    setBulkExcelData([]);
-    setBulkWarehouseData({
-      warehouseName: '',
-      addressLine: '',
-      city: '',
-      postalCode: '',
-      contactNumber: ''
-    });
-    setIsSuccess(true);
+  const handleConfirmOrder = async () => {
+    setError(null);
+    try {
+      // 1. Format Bulk Order Address
+      const addressString = [
+        bulkWarehouseData.warehouseName,
+        bulkWarehouseData.addressLine,
+        bulkWarehouseData.city,
+        bulkWarehouseData.postalCode,
+        bulkWarehouseData.contactNumber
+      ].filter(Boolean).join(', ') + ' (Bulk Excel)';
+
+      // 2. Map Cart Items
+      const items = cartItems.map((item) => ({
+        productId: item.isCustomBox ? 24 : parseInt(item.productId, 10),
+        quantity:  item.quantity,
+        unitPrice: item.price,
+        size:      item.size     || null,
+        material:  item.material || null,
+        customBoxConfigId: item.customBoxConfigId || null,
+      }));
+
+      // 3. Create Order
+      const order = await orderApi.create({ shippingAddress: addressString, items });
+      const orderId     = order.rawId;
+      const totalAmount = order.rawAmount;
+
+      setCurrentOrderId(orderId);
+
+      // 4. Initiate Paymob Payment
+      const billingData = {
+        first_name:      'Bulk',
+        last_name:       'Order',
+        email:           'bulk@packora.com',
+        phone_number:    bulkWarehouseData.contactNumber || 'NA',
+        street:          bulkWarehouseData.addressLine || 'NA',
+        city:            bulkWarehouseData.city   || 'NA',
+        country:         'EG',
+        apartment:       'NA',
+        floor:           'NA',
+        building:        'NA',
+        shipping_method: 'NA',
+        postal_code:     bulkWarehouseData.postalCode    || 'NA',
+        state:           'NA',
+      };
+
+      const paymentResp = await paymentApi.initiate(orderId, totalAmount, billingData);
+      
+      // 5. Store iframe URL and go to payment step
+      setIframeUrl(paymentResp.iframeUrl);
+      setCheckoutStep('payment');
+      
+      // Navigate to standard checkout to show payment iframe
+      navigate('/Cart/checkout');
+      
+    } catch (err) {
+      console.error("Bulk Order creation failed:", err);
+      setError(err.message || 'Failed to initialize payment. Please try again.');
+      throw err; // So Step3Review knows to stop loading
+    }
   };
 
   if (isSuccess) {
@@ -116,11 +176,18 @@ export default function BulkOrder() {
         )}
         
         {currentStep === 3 && (
-          <Step3Review 
-            data={bulkExcelData} 
-            onBack={handlePrevStep} 
-            onConfirm={handleConfirmOrder}
-          />
+          <>
+            {error && (
+              <div style={{ color: '#ef4444', marginBottom: '1rem', padding: '1rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', maxWidth: '1000px', margin: '0 auto 20px auto' }}>
+                {error}
+              </div>
+            )}
+            <Step3Review 
+              data={bulkExcelData} 
+              onBack={handlePrevStep} 
+              onConfirm={handleConfirmOrder}
+            />
+          </>
         )}
 
       </main>

@@ -133,8 +133,8 @@ export default function Cart() {
                       </button>
                     </div>
                     <div className="cart-item-prices">
-                      <span className="cart-item-unit">${item.price.toFixed(2)} each</span>
-                      <span className="cart-item-total">${(item.price * item.quantity).toFixed(2)}</span>
+                      <span className="cart-item-unit">EGP {item.price.toFixed(2)} each</span>
+                      <span className="cart-item-total">EGP {(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -147,15 +147,15 @@ export default function Cart() {
             <div className="cart-summary-rows">
               <div className="cart-summary-row">
                 <span>Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>EGP {subtotal.toFixed(2)}</span>
               </div>
               <div className="cart-summary-row">
                 <span>Shipping</span>
-                <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                <span>{shipping === 0 ? 'FREE' : `EGP ${shipping.toFixed(2)}`}</span>
               </div>
               <div className="cart-summary-row">
                 <span>Tax (8%)</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>EGP {tax.toFixed(2)}</span>
               </div>
             </div>
             {shipping === 0 && subtotal > 0 && (
@@ -166,7 +166,7 @@ export default function Cart() {
             )}
             <div className="cart-summary-total">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>EGP {total.toFixed(2)}</span>
             </div>
             {bulkExcelData && bulkExcelData.length > 0 ? (
               <button 

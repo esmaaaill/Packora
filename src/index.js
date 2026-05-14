@@ -36,12 +36,9 @@ import AdminPackagings from './components/Admin/AdminPackagings';
 import GlobalLayout from './components/Layout/GlobalLayout';
 import LandingPage from './components/LandingPage/LandingPage';
 import Design from './components/Design/Design';
-import Footer from './components/Footer/Footer';
 import LoginPage from './components/LoginPage/LoginPage';
 import RequireAuth from './components/RequireAuth';
 import BulkOrder from './components/BulkOrder/BulkOrder';
-import PaymentSuccess from './components/Cart/PaymentSuccess';
-import PaymentFailed from './components/Cart/PaymentFailed';
 import PackagingQuote from './components/Packaging/PackagingQuote';
 
 let router = createBrowserRouter([
@@ -68,10 +65,7 @@ let router = createBrowserRouter([
           { path: 'Support', element: <Support /> },
           { path: 'Profile', element: <Profile /> },
           { path: 'Design', element: <Design /> },
-          { path: 'Footer', element: <Footer /> },
           { path: 'BulkOrder', element: <BulkOrder /> },
-          { path: 'payment/success', element: <PaymentSuccess /> },
-          { path: 'payment/failed',  element: <PaymentFailed /> },
           { path: 'Packaging/quote', element: <PackagingQuote /> },
         ],
       },

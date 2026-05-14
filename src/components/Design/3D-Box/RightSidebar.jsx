@@ -53,7 +53,7 @@ const PRESET_COLORS = [
 export default function RightSidebar() {
   const {
     selectedFace, selectedElementId, designs,
-    addTextElement, addImageElement, updateElement, deleteElement,
+    addTextElement, addImageElement, updateElement, deleteElement, duplicateElementToAllFaces, deleteElementFromAllFaces,
     setFaceBackground,
     setFacesBackground,
     setSelectedFace,
@@ -61,7 +61,7 @@ export default function RightSidebar() {
 
   const [colorPickerOpen, setColorPickerOpen] = useState(null)
   const [panelTarget, setPanelTarget] = useState('selected')
-
+  const propertiesPanelRef = useRef(null)
 
   const elements = designs[selectedFace].elements
   const selectedEl = selectedElementId ? elements.find(el => el.id === selectedElementId) : null
@@ -76,6 +76,12 @@ export default function RightSidebar() {
     // Keep UI in sync when user selects another face.
     if (panelTarget === 'selected') setLocalBgColor(bgColor || '#ffffff')
   }, [bgColor, panelTarget])
+
+  useEffect(() => {
+    if (selectedElementId && propertiesPanelRef.current) {
+      propertiesPanelRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [selectedElementId])
 
   useEffect(() => {
     // If user had targeted a specific panel, but then clicks a different face in 3D/2D,
@@ -235,18 +241,35 @@ export default function RightSidebar() {
 
         {/* Element Properties */}
         {selectedEl ? (
-          <div className="space-y-4 p-5 panel-enter">
+          <div className="space-y-4 p-5 panel-enter" ref={propertiesPanelRef}>
             <div className="border-t border-border pt-4">
               <div className="flex justify-between items-center mb-3">
                 <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Element Properties
                 </label>
-                <button
-                  onClick={() => deleteElement(selectedFace, selectedEl.id)}
-                  className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => duplicateElementToAllFaces(selectedFace, selectedEl.id)}
+                    className="text-[10px] font-semibold text-[var(--deep-teal)] bg-[var(--deep-teal)]/10 px-2 py-1 rounded hover:bg-[var(--deep-teal)]/20 transition-colors"
+                    title="Copy to all outside faces"
+                  >
+                    Apply to Outsides
+                  </button>
+                  <button
+                    onClick={() => deleteElementFromAllFaces(selectedFace, selectedEl.id)}
+                    className="text-[10px] font-semibold text-red-400 bg-red-400/10 px-2 py-1 rounded hover:bg-red-400/20 transition-colors"
+                    title="Remove from all faces"
+                  >
+                    Delete from All
+                  </button>
+                  <button
+                    onClick={() => deleteElement(selectedFace, selectedEl.id)}
+                    className="text-[10px] font-semibold text-red-400 bg-red-400/10 px-2 py-1 rounded hover:bg-red-400/20 transition-colors"
+                    title="Remove from current face"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
 
               {/* Position */}
@@ -344,6 +367,7 @@ export default function RightSidebar() {
                     <textarea
                       value={selectedEl.content}
                       onChange={e => update('content', e.target.value)}
+                      placeholder="make your text here"
                       rows={2}
                       className="w-full bg-muted border border-border/60 rounded px-2 py-1.5 text-xs text-foreground resize-none
                           focus:outline-none focus:border-primary"

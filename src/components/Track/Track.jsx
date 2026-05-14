@@ -106,7 +106,8 @@ export default function Track() {
     return orders.filter((o) => {
       return (
         o.id.toLowerCase().includes(q) ||
-        o.product.toLowerCase().includes(q)
+        o.product.toLowerCase().includes(q) ||
+        (o.trackingNumber || '').toLowerCase().includes(q)
       );
     });
   }, [searchQuery, orders]);

@@ -238,7 +238,7 @@ export default function AdminProducts() {
                 />
               </div>
               <div className="admin-form-row">
-                <label htmlFor="p-price">Price (USD)</label>
+                <label htmlFor="p-price">Price (EGP)</label>
                 <input
                   id="p-price"
                   type="number"

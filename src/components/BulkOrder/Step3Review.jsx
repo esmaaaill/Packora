@@ -53,12 +53,15 @@ export default function Step3Review({ data, onBack, onConfirm }) {
   const isQuantityMatch = validRows === totalBoxes;
   const canConfirm = errors === 0 && totalBoxes > 0 && isQuantityMatch;
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setIsConfirming(true);
-    // Simulate API call
-    setTimeout(() => {
-      onConfirm();
-    }, 1500);
+    try {
+      await onConfirm();
+    } catch (err) {
+      // Error handled by parent or thrown here
+    } finally {
+      setIsConfirming(false);
+    }
   };
 
   return (

@@ -6,8 +6,11 @@ import './PaymentResult.css';
 
 /**
  * ReviewOrder — The final step of checkout (Step 3).
- * This component acts as the order confirmation/review page after Paymob redirects back.
- * The URL will look like: /Cart/checkout?step=review&success=true&txn=12345
+ * ⚠️  Despite the name "ReviewOrder", this component is actually the
+ * **Payment Result Screen** — it shows success or failure after Paymob
+ * redirects the user back to /Cart/checkout?step=review.
+ * A future rename to `PaymentResultStep` or `OrderConfirmation` would
+ * better reflect what this component does.
  */
 export default function ReviewOrder() {
   const navigate = useNavigate();

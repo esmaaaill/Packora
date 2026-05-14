@@ -91,29 +91,78 @@ export function CartProvider({ children }) {
     try {
       await cartApi.clearCart();
       setCartItems([]);
+      // Reset checkout state after successful order
+      const emptyAddress = { fullName: '', company: '', street: '', city: '', state: '', zip: '', phone: '', email: '' };
+      setShippingAddress(emptyAddress);
+      setCheckoutStep('shipping');
+      setCurrentOrderId(null);
+      try {
+        localStorage.removeItem('packora_shipping_address');
+        localStorage.removeItem('packora_checkout_step');
+        localStorage.removeItem('packora_current_order_id');
+      } catch { }
     } catch (err) {
       console.error('clearCart error:', err);
       throw err;
     }
   }, []);
 
-  // ── Checkout / Shipping state (local-only) ────────────────────
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: '',
-    company: '',
-    street: '',
-    city: '',
-    state: '',
-    zip: '',
-    phone: '',
+  // ── Checkout / Shipping state (persisted to localStorage) ────────
+  const [shippingAddress, setShippingAddress] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('packora_shipping_address')) || {
+        fullName: '', company: '', street: '', city: '', state: '', zip: '', phone: '', email: '',
+      };
+    } catch {
+      return { fullName: '', company: '', street: '', city: '', state: '', zip: '', phone: '', email: '' };
+    }
   });
 
-  // ── Payment state (local-only, no backend support yet) ────────
-  const [paymentMethods, setPaymentMethods] = useState([]);
-  const [selectedPaymentId, setSelectedPaymentId] = useState(null);
-  const [checkoutStep, setCheckoutStep] = useState('shipping');
+  // ── Payment state (persisted to localStorage) ────────────────
+  const [paymentMethods, setPaymentMethods] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('packora_payment_methods')) || []; } catch { return []; }
+  });
+  const [selectedPaymentId, setSelectedPaymentId] = useState(() => {
+    try { return localStorage.getItem('packora_selected_payment') || null; } catch { return null; }
+  });
+  const [checkoutStep, setCheckoutStep] = useState(() => {
+    try { return localStorage.getItem('packora_checkout_step') || 'shipping'; } catch { return 'shipping'; }
+  });
   const [iframeUrl, setIframeUrl] = useState(null);
-  const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [currentOrderId, setCurrentOrderId] = useState(() => {
+    try {
+      const v = localStorage.getItem('packora_current_order_id');
+      return v ? Number(v) : null;
+    } catch { return null; }
+  });
+
+  // Sync payment methods to localStorage on change
+  useEffect(() => {
+    try { localStorage.setItem('packora_payment_methods', JSON.stringify(paymentMethods)); } catch { }
+  }, [paymentMethods]);
+
+  useEffect(() => {
+    try {
+      if (selectedPaymentId) localStorage.setItem('packora_selected_payment', selectedPaymentId);
+      else localStorage.removeItem('packora_selected_payment');
+    } catch { }
+  }, [selectedPaymentId]);
+
+  // Sync checkout state to localStorage on change
+  useEffect(() => {
+    try { localStorage.setItem('packora_shipping_address', JSON.stringify(shippingAddress)); } catch { }
+  }, [shippingAddress]);
+
+  useEffect(() => {
+    try { localStorage.setItem('packora_checkout_step', checkoutStep); } catch { }
+  }, [checkoutStep]);
+
+  useEffect(() => {
+    try {
+      if (currentOrderId != null) localStorage.setItem('packora_current_order_id', String(currentOrderId));
+      else localStorage.removeItem('packora_current_order_id');
+    } catch { }
+  }, [currentOrderId]);
 
   // ── Bulk order state ──────────────────────────────────────────
   const [bulkExcelData, setBulkExcelData] = useState([]);

@@ -51,7 +51,7 @@ export default function AdminAnalytics() {
       key: 'aov', 
       label: 'Average Order Value', 
       icon: DollarSign, 
-      value: dashboardStats.totalOrders ? formatMoney(dashboardStats.totalRevenue / dashboardStats.totalOrders) : '$0',
+      value: dashboardStats.totalOrders ? formatMoney(dashboardStats.totalRevenue / dashboardStats.totalOrders) : 'EGP 0',
     },
     { 
       key: 'sold', 

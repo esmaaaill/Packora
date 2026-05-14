@@ -196,11 +196,15 @@ function normalizeOrder(o) {
     rawId: o.id, // For API calls (e.g. cancel, update status)
     status: (o.status || 'PENDING').toLowerCase(),
     date: formatOrderDate(o.orderDate),
-    amount: `$${(o.totalAmount || 0).toFixed(2)}`,
+    amount: `EGP ${(o.totalAmount || 0).toFixed(2)}`,
     product: productLabel,
     quantity: o.totalQuantity || 0,
     rawDate: o.orderDate,
     rawAmount: o.totalAmount,
+    // Admin display fields mapped from backend
+    customer: o.userName || o.userUsername || o.userEmail || '—',
+    email: o.userEmail || '—',
+    address: o.shippingAddress || '—',
   };
 }
 
@@ -218,7 +222,7 @@ export const orderApi = {
   getById: (id) => apiFetch(`/api/orders/${id}`).then(normalizeOrder),
 
   /** PUT /api/orders/:id/status – update order status (ADMIN) */
-  updateStatus: (id, status) => apiFetch(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }).then(normalizeOrder),
+  updateStatus: (id, status) => apiFetch(`/api/orders/${id}/status`, { method: 'PUT', body: JSON.stringify({ status: String(status).toUpperCase() }) }).then(normalizeOrder),
 
   /** PUT /api/orders/:id/cancel – cancel an order */
   cancel: (id) => apiFetch(`/api/orders/${id}/cancel`, { method: 'PUT' }).then(normalizeOrder),

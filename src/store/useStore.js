@@ -119,7 +119,7 @@ export const useStore = create((set, get) => ({
 
   addTextElement: (face) => {
     const element = {
-      id: uuidv4(), type: 'text', content: 'Your Text Here',
+      id: uuidv4(), type: 'text', content: '',
       x: 50, y: 50, width: 200, height: 40, rotation: 0,
       fontSize: 24, fontFamily: 'Inter', color: isInnerFace(face) ? '#5c3a1e' : '#000000',
       fontWeight: 'normal', textAlign: 'center', opacity: 1, visible: true, locked: false,
@@ -174,6 +174,56 @@ export const useStore = create((set, get) => ({
       },
       selectedElementId: s.selectedElementId === id ? null : s.selectedElementId,
     }))
+    get().saveHistory()
+    get().calculatePrice()
+  },
+
+  deleteElementFromAllFaces: (sourceFace, id) => {
+    set(s => {
+      const sourceEl = s.designs[sourceFace]?.elements.find(el => el.id === id)
+      if (!sourceEl) return s
+
+      const newDesigns = { ...s.designs }
+      
+      ALL_FACES.forEach(face => {
+        if (!newDesigns[face]) return
+        newDesigns[face] = {
+          ...newDesigns[face],
+          elements: newDesigns[face].elements.filter(
+            el => !(el.type === sourceEl.type && el.content === sourceEl.content)
+          )
+        }
+      })
+
+      return { 
+        designs: newDesigns,
+        selectedElementId: null
+      }
+    })
+    get().saveHistory()
+    get().calculatePrice()
+  },
+
+  duplicateElementToAllFaces: (sourceFace, id) => {
+    set(s => {
+      const sourceEl = s.designs[sourceFace]?.elements.find(el => el.id === id)
+      if (!sourceEl) return s
+      
+      const newDesigns = { ...s.designs }
+      OUTER_FACES.forEach(face => {
+        if (face === sourceFace) return
+        if (!newDesigns[face]) return
+        
+        // Add duplicate with new ID
+        const newEl = { ...sourceEl, id: uuidv4() }
+        newDesigns[face] = {
+          ...newDesigns[face],
+          elements: [...newDesigns[face].elements, newEl]
+        }
+      })
+      
+      return { designs: newDesigns }
+    })
     get().saveHistory()
     get().calculatePrice()
   },

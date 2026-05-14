@@ -5,16 +5,16 @@ import { useCart } from '../../../context/CartContext'
 import { customBoxConfigApi } from '../../../utils/api'
 
 export default function Navbar() {
-  const { 
-    undo, redo, history, historyIndex, designs, boxDimensions, material, quantity, price, 
-    savedConfigId, isDirty, setSavedConfigId, setIsDirty 
+  const {
+    undo, redo, history, historyIndex, designs, boxDimensions, material, quantity, price,
+    savedConfigId, isDirty, setSavedConfigId, setIsDirty
   } = useStore()
-  
+
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-  
+
   const navigate = useNavigate()
   const { addToCart } = useCart()
 
@@ -40,7 +40,7 @@ export default function Navbar() {
         // Create new
         config = await customBoxConfigApi.create(payload, explicitSave);
       }
-      
+
       setSavedConfigId(config.id);
       setIsDirty(false);
       return config.id;
@@ -88,23 +88,23 @@ export default function Navbar() {
         const style = window.getComputedStyle(node)
         return style.display !== 'none' && node.width > 0 && node.height > 0
       })
-      
+
       if (canvas) {
         thumbnail = canvas.toDataURL()
       }
-      
+
       // 3. Add to cart with configId
       await addToCart({
         productId: 'custom-3d-box',
         name: 'Custom 3D Box',
         image: thumbnail,
-        price: price, 
+        price: price,
         quantity: quantity,
         size: `${boxDimensions.length}"x${boxDimensions.width}"x${boxDimensions.height}"`,
         material: material,
         customBoxConfigId: configId
       })
-      
+
       navigate('/Cart')
     } catch (error) {
       console.error("Failed to add to cart:", error);
@@ -117,28 +117,28 @@ export default function Navbar() {
   return (
     <nav className="glass-panel flex min-h-[84px] shrink-0 items-center justify-between gap-6 px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-sm border border-border/50">
       <div className="flex min-w-0 items-center gap-3">
-        <button 
+        <button
           onClick={() => navigate('/HomePage')}
           className="mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-card/60 border border-border text-foreground transition-all hover:bg-card hover:shadow-md"
           title="Back to Dashboard"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
         </button>
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--deep-teal)] shadow-md">
           <svg width="20" height="20" viewBox="0 0 18 18" fill="none">
-            <path d="M9 1L16 5V13L9 17L2 13V5L9 1Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
-            <path d="M9 1V17M2 5L9 9L16 5" stroke="white" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M9 1L16 5V13L9 17L2 13V5L9 1Z" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M9 1V17M2 5L9 9L16 5" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
           </svg>
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-['Space_Grotesk'] text-xl font-bold tracking-tight text-foreground">
-              PackCraft
+              Packora
             </span>
             <span className="hidden rounded-full border border-border bg-[var(--vintage-grape)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-white md:inline-flex">
-              Studio
+              Design
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs text-muted-foreground">
@@ -164,7 +164,7 @@ export default function Navbar() {
           className="flex h-11 items-center gap-1.5 rounded-2xl border border-border bg-card/40 px-3 text-sm font-medium text-foreground/90 transition-all hover:border-border/80 hover:bg-card/80 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 7v6h6M3 13C5.8 7.3 10.9 4 16.5 4 20.6 4 24 7.4 24 11.5S20.6 19 16.5 19H12"/>
+            <path d="M3 7v6h6M3 13C5.8 7.3 10.9 4 16.5 4 20.6 4 24 7.4 24 11.5S20.6 19 16.5 19H12" />
           </svg>
           <span className="hidden sm:inline">Undo</span>
         </button>
@@ -176,7 +176,7 @@ export default function Navbar() {
           className="flex h-11 items-center gap-1.5 rounded-2xl border border-border bg-card/40 px-3 text-sm font-medium text-foreground/90 transition-all hover:border-border/80 hover:bg-card/80 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 7v6h-6M21 13C18.2 7.3 13.1 4 7.5 4 3.4 4 0 7.4 0 11.5S3.4 19 7.5 19H12"/>
+            <path d="M21 7v6h-6M21 13C18.2 7.3 13.1 4 7.5 4 3.4 4 0 7.4 0 11.5S3.4 19 7.5 19H12" />
           </svg>
           <span className="hidden sm:inline">Redo</span>
         </button>
@@ -189,9 +189,9 @@ export default function Navbar() {
           className="hidden h-11 items-center gap-1.5 rounded-2xl border border-border bg-card/40 px-4 text-sm font-medium text-foreground transition-all hover:border-border/80 hover:bg-card/80 hover:text-foreground md:flex"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-            <polyline points="17,21 17,13 7,13 7,21"/>
-            <polyline points="7,3 7,8 15,8"/>
+            <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+            <polyline points="17,21 17,13 7,13 7,21" />
+            <polyline points="7,3 7,8 15,8" />
           </svg>
           <span>{saveError ? 'Save failed' : saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}</span>
         </button>
@@ -201,14 +201,14 @@ export default function Navbar() {
           className="hidden h-11 items-center gap-1.5 rounded-2xl border border-border bg-card/40 px-4 text-sm font-medium text-foreground transition-all hover:border-border/80 hover:bg-card/80 hover:text-foreground md:flex"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-            <polyline points="7,10 12,15 17,10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+            <polyline points="7,10 12,15 17,10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
           <span className="hidden sm:inline">Export</span>
         </button>
 
-        <button 
+        <button
           onClick={handleAddToCart}
           disabled={isSyncing}
           className={`flex h-11 items-center gap-1.5 rounded-2xl bg-[var(--deep-teal)] px-4 text-sm font-semibold text-white shadow-md transition-all ${isSyncing ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[var(--vintage-grape)] hover:translate-y-[-1px] hover:shadow-lg'}`}
@@ -217,8 +217,8 @@ export default function Navbar() {
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></div>
           ) : (
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-              <path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/>
+              <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6" />
             </svg>
           )}
           {isSyncing ? 'Syncing...' : 'Add to Cart'}
