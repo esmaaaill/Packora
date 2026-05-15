@@ -373,7 +373,7 @@ public class ShipmentServiceImpl implements ShipmentService {
      * Example: Order 42 → TRK-0042
      */
     private String generateTrackingNumber(Long orderId) {
-        return "TRK-" + String.format("%04d", orderId % 10000);
+        return "TRK-" + String.format("%08d", orderId);
     }
 
     // ══════════════════════════════════════════════════════════════════════════
