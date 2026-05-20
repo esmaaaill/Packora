@@ -24,4 +24,8 @@ public interface UserService {
     com.packora.backend.dto.user.SavedAddressResponse updateAddress(Long userId, Long addressId, com.packora.backend.dto.user.SavedAddressRequest request);
     void deleteAddress(Long userId, Long addressId);
     void setPrimaryAddress(Long userId, Long addressId);
+
+    // Notification Preferences
+    com.packora.backend.dto.user.NotificationPrefsResponse getNotificationPrefs(Long userId);
+    com.packora.backend.dto.user.NotificationPrefsResponse updateNotificationPrefs(Long userId, com.packora.backend.dto.user.NotificationPrefsRequest request);
 }

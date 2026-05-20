@@ -96,7 +96,11 @@ public class UserServiceImpl implements UserService {
                 user.getCompanyName(),
                 user.getServiceType(),
                 user.getRole() != null ? user.getRole() : "USER",
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getNotifOrderUpdates(),
+                user.getNotifShippingAlerts(),
+                user.getNotifPromotions(),
+                user.getNotifNewsletter()
         );
     }
 
@@ -229,6 +233,39 @@ public class UserServiceImpl implements UserService {
                 .state(address.getState())
                 .zip(address.getZip())
                 .isPrimary(address.getIsPrimary())
+                .build();
+    }
+
+    // ── Notification Preferences Implementation ────────────────────────────────
+
+    @Override
+    public NotificationPrefsResponse getNotificationPrefs(Long userId) {
+        User user = getUserEntityById(userId);
+        return NotificationPrefsResponse.builder()
+                .orderUpdates(user.getNotifOrderUpdates())
+                .shippingAlerts(user.getNotifShippingAlerts())
+                .promotions(user.getNotifPromotions())
+                .newsletter(user.getNotifNewsletter())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public NotificationPrefsResponse updateNotificationPrefs(Long userId, NotificationPrefsRequest request) {
+        User user = getUserEntityById(userId);
+
+        if (request.getOrderUpdates() != null) user.setNotifOrderUpdates(request.getOrderUpdates());
+        if (request.getShippingAlerts() != null) user.setNotifShippingAlerts(request.getShippingAlerts());
+        if (request.getPromotions() != null) user.setNotifPromotions(request.getPromotions());
+        if (request.getNewsletter() != null) user.setNotifNewsletter(request.getNewsletter());
+
+        user = userRepository.save(user);
+
+        return NotificationPrefsResponse.builder()
+                .orderUpdates(user.getNotifOrderUpdates())
+                .shippingAlerts(user.getNotifShippingAlerts())
+                .promotions(user.getNotifPromotions())
+                .newsletter(user.getNotifNewsletter())
                 .build();
     }
 }

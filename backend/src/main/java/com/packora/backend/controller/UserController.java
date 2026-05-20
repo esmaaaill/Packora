@@ -106,6 +106,23 @@ public class UserController {
         return ResponseEntity.ok(new MessageResponse("Primary address set successfully!"));
     }
 
+    // ── Notification Preferences Endpoints ─────────────────────────────────────
+
+    @GetMapping("/me/notifications")
+    public ResponseEntity<com.packora.backend.dto.user.NotificationPrefsResponse> getMyNotificationPrefs(
+            @AuthenticationPrincipal UserDetailsImpl principal) {
+        log.info("[UserController] GET /api/users/me/notifications — userId={}", principal.getId());
+        return ResponseEntity.ok(userService.getNotificationPrefs(principal.getId()));
+    }
+
+    @PutMapping("/me/notifications")
+    public ResponseEntity<com.packora.backend.dto.user.NotificationPrefsResponse> updateMyNotificationPrefs(
+            @AuthenticationPrincipal UserDetailsImpl principal,
+            @Valid @RequestBody com.packora.backend.dto.user.NotificationPrefsRequest request) {
+        log.info("[UserController] PUT /api/users/me/notifications — userId={}", principal.getId());
+        return ResponseEntity.ok(userService.updateNotificationPrefs(principal.getId(), request));
+    }
+
     // ── Admin Endpoints ────────────────────────────────────────────────────────
 
     /**
