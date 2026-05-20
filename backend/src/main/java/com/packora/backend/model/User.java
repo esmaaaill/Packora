@@ -57,6 +57,18 @@ public abstract class User implements UserDetails {
     // PartnerPackaging and PartnerShipping both have a service type
     private String serviceType;
 
+    @Column(name = "notif_order_updates", nullable = false)
+    private Boolean notifOrderUpdates = true;
+
+    @Column(name = "notif_shipping_alerts", nullable = false)
+    private Boolean notifShippingAlerts = true;
+
+    @Column(name = "notif_promotions", nullable = false)
+    private Boolean notifPromotions = false;
+
+    @Column(name = "notif_newsletter", nullable = false)
+    private Boolean notifNewsletter = false;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
