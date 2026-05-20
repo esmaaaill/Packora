@@ -112,6 +112,45 @@ export const userApi = {
       body: JSON.stringify(data),
     }),
 
+  /** GET /api/users/me/addresses – get user's saved addresses */
+  getAddresses: () => apiFetch('/api/users/me/addresses'),
+
+  /** POST /api/users/me/addresses – save a new address */
+  addAddress: (data) =>
+    apiFetch('/api/users/me/addresses', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  /** PUT /api/users/me/addresses/:id – update an existing address */
+  updateAddress: (id, data) =>
+    apiFetch(`/api/users/me/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
+  /** DELETE /api/users/me/addresses/:id – delete a saved address */
+  deleteAddress: (id) =>
+    apiFetch(`/api/users/me/addresses/${id}`, {
+      method: 'DELETE',
+    }),
+
+  /** PUT /api/users/me/addresses/:id/primary – set address as primary */
+  setPrimaryAddress: (id) =>
+    apiFetch(`/api/users/me/addresses/${id}/primary`, {
+      method: 'PUT',
+    }),
+
+  /** GET /api/users/me/notifications – get notification prefs */
+  getNotificationPrefs: () => apiFetch('/api/users/me/notifications'),
+
+  /** PUT /api/users/me/notifications – update notification prefs */
+  updateNotificationPrefs: (data) =>
+    apiFetch('/api/users/me/notifications', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+
   /** GET /api/users – list all users (ADMIN) */
   getAll: () => apiFetch('/api/users'),
 
@@ -212,6 +251,12 @@ export const orderApi = {
   /** POST /api/orders – place a new order */
   create: (data) => apiFetch('/api/orders', { method: 'POST', body: JSON.stringify(data) }).then(normalizeOrder),
 
+  /**
+   * POST /api/orders/bulk – place a bulk order (one order per recipient).
+   * Returns { primaryOrderId, totalAmount, bulkGroupId, recipientCount, orderIds }
+   */
+  createBulk: (data) => apiFetch('/api/orders/bulk', { method: 'POST', body: JSON.stringify(data) }),
+
   /** GET /api/orders/me – get orders for current user */
   getMyOrders: () => apiFetch('/api/orders/me').then(list => list.map(normalizeOrder)),
 
@@ -227,6 +272,7 @@ export const orderApi = {
   /** PUT /api/orders/:id/cancel – cancel an order */
   cancel: (id) => apiFetch(`/api/orders/${id}/cancel`, { method: 'PUT' }).then(normalizeOrder),
 };
+
 
 // ── Cart API ─────────────────────────────────────────────────────────
 

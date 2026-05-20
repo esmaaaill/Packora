@@ -18,4 +18,8 @@ public class UserResponse {
     private String serviceType;
     private String role;
     private LocalDateTime createdAt;
+    private Boolean notifOrderUpdates;
+    private Boolean notifShippingAlerts;
+    private Boolean notifPromotions;
+    private Boolean notifNewsletter;
 }

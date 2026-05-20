@@ -40,7 +40,7 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CartResponse getCartForUser(Long userId) {
         Cart cart = getOrCreateCart(userId);
         return mapToResponse(cart);
