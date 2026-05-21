@@ -28,7 +28,7 @@ const baseNavItems = [
   { to: '/Support', label: 'Support', icon: HelpCircle, match: '/Support' },
 ];
 
-const profileNavItem = { to: '/Profile', label: 'Profile', icon: User, match: '/Profile' };
+
 
 export default function Navbar() {
   const location = useLocation();
@@ -52,7 +52,7 @@ export default function Navbar() {
     window.location.href = '/';
   };
 
-  const navItems = user ? [...baseNavItems, profileNavItem] : baseNavItems;
+  const navItems = baseNavItems;
 
   return (
     <header className="global-navbar">
@@ -68,9 +68,7 @@ export default function Navbar() {
           <Link
             key={to}
             to={to}
-            className={`global-navbar-item ${isActive(match) ? 'active' : ''} ${
-              label === 'Cart' && cartItems.length > 0 ? 'has-badge' : ''
-            }`}
+            className={`global-navbar-item ${isActive(match) ? 'active' : ''} ${label === 'Cart' && cartItems.length > 0 ? 'has-badge' : ''}`}
           >
             <Icon size={18} />
             {label}
@@ -79,17 +77,18 @@ export default function Navbar() {
             )}
           </Link>
         ))}
+        {user && (
+          <Link
+            to="/Profile"
+            className={`global-navbar-item ${isActive('/Profile') ? 'active' : ''}`}
+          >
+            <User size={18} />
+            {user.displayName || user.name || user.username || 'Profile'}
+          </Link>
+        )}
       </nav>
 
       <div className="global-navbar-right">
-        {user && (
-          <Link to="/Profile" className="global-navbar-user-block" title="Profile">
-            <span className="global-navbar-user-icon" aria-hidden>
-              <User size={18} />
-            </span>
-            <span className="global-navbar-user">{user.displayName}</span>
-          </Link>
-        )}
         {user ? (
           <button type="button" className="global-navbar-item global-navbar-logout" onClick={handleLogout}>
             <LogOut size={18} />

@@ -8,7 +8,6 @@ import {
   LineChart,
   LogOut,
   Box,
-  Archive,
 } from 'lucide-react';
 import './Admin.css';
 import { useAdminAuth } from '../../context/AdminAuthContext';
@@ -17,7 +16,6 @@ const nav = [
   { to: '/admin', end: true, label: 'Dashboard', icon: LayoutDashboard },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingCart },
   { to: '/admin/products', label: 'Products', icon: Package },
-  { to: '/admin/packagings', label: 'Packagings', icon: Archive },
   { to: '/admin/customers', label: 'Customers', icon: Users },
   { to: '/admin/analytics', label: 'Analytics', icon: LineChart },
 ];

@@ -34,7 +34,7 @@ export default function HomePage() {
     productApi
       .getAll()
       .then((data) => {
-        if (!cancelled) setProducts(data);
+        if (!cancelled) setProducts(data.slice(0, 8));
       })
       .catch(() => {
         /* silent — homepage still renders without product data */

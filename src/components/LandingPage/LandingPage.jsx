@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LandingPage.css";
 import Navbar from "../Navbar/Navbar";
@@ -7,11 +7,19 @@ import { useAuth } from "../../context/AuthContext";
 
 const FEATURE_SLIDE_COUNT = 6;
 
+const slides = [
+  { num: 1, icon: '📦', title: '3D Box Customizer', desc: 'Design your perfect packaging with our interactive 3D customizer. Change colors, add logos, and see your design in real-time.', img: '1.png' },
+  { num: 2, icon: '🍃', title: 'Eco Mailer Boxes', desc: 'Sustainable kraft mailers with 100% recycled materials. Fast, secure, and planet-friendly.', img: '2.png' },
+  { num: 3, icon: '🎁', title: 'Premium Packaging', desc: 'High-quality boxes, mailers, and custom solutions designed to protect your products and elevate your brand.', img: '3.png' },
+  { num: 4, icon: '🚛', title: 'Fast Shipping', desc: 'Quick turnaround times with reliable shipping options. Track your orders every step of the way.', img: '4.png' },
+  { num: 5, icon: '⚡️', title: 'Easy Ordering', desc: 'Simple online ordering process with flexible quantities and competitive pricing for all sizes.', img: '5.png' },
+  { num: 6, icon: '🎨', title: 'Custom Branding', desc: 'Upload your logo, choose your colors, and create packaging that perfectly represents your brand.', img: '6.png' },
+];
+
 const LandingPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [slideIndex, setSlideIndex] = useState(0);
-  const scrollRef = useRef(null);
 
   const goToSlide = useCallback((index) => {
     setSlideIndex(((index % FEATURE_SLIDE_COUNT) + FEATURE_SLIDE_COUNT) % FEATURE_SLIDE_COUNT);
@@ -25,52 +33,11 @@ const LandingPage = () => {
     setSlideIndex((i) => (i - 1 + FEATURE_SLIDE_COUNT) % FEATURE_SLIDE_COUNT);
   }, []);
 
-  useLayoutEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const w = el.clientWidth;
-    if (!w) return;
-    el.scrollTo({ left: slideIndex * w, behavior: "smooth" });
-  }, [slideIndex]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => {
-      const w = el.clientWidth;
-      if (!w) return;
-      el.scrollTo({ left: slideIndex * w, behavior: "auto" });
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [slideIndex]);
-
   useEffect(() => {
     const id = window.setInterval(() => {
       setSlideIndex((i) => (i + 1) % FEATURE_SLIDE_COUNT);
-    }, 6500);
+    }, 5000);
     return () => window.clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    let debounceId;
-    const onScroll = () => {
-      window.clearTimeout(debounceId);
-      debounceId = window.setTimeout(() => {
-        const w = el.clientWidth;
-        if (!w) return;
-        const idx = Math.round(el.scrollLeft / w);
-        const clamped = Math.max(0, Math.min(FEATURE_SLIDE_COUNT - 1, idx));
-        setSlideIndex((prev) => (clamped !== prev ? clamped : prev));
-      }, 120);
-    };
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      window.clearTimeout(debounceId);
-    };
   }, []);
 
   const requireLogin = useCallback(
@@ -240,146 +207,74 @@ const LandingPage = () => {
           </div>
         </section>
 
-        {/* FEATURE SLIDER */}
+        {/* FEATURE SLIDER — card carousel */}
         <section className="feature-slider">
           <div className="section-container">
-            <div className="slider-frame">
-              <div className="slider-wrapper" ref={scrollRef}>
-                <div className="slide-container">
-                {/* SLIDE 1 */}
-                <div className="slide">
+            <div className="slider-header">
+              <span className="slider-eyebrow">PLATFORM FEATURES</span>
+              <h2 className="slider-heading heading-font">Everything you need to ship.</h2>
+            </div>
+
+            <div className="slider-stage">
+              {slides.map((slide, i) => {
+                const raw = ((i - slideIndex) % FEATURE_SLIDE_COUNT + FEATURE_SLIDE_COUNT) % FEATURE_SLIDE_COUNT;
+                const offset = raw > FEATURE_SLIDE_COUNT / 2 ? raw - FEATURE_SLIDE_COUNT : raw;
+                let cls = 'slide-card';
+                if (offset === 0) cls += ' slide-card--active';
+                else if (offset === -1) cls += ' slide-card--prev';
+                else if (offset === 1) cls += ' slide-card--next';
+                else cls += ' slide-card--hidden';
+                return (
                   <div
-                    className="slide-bg"
-                    style={{
-                      backgroundImage: `url(${process.env.PUBLIC_URL}/img/1.jpeg)`,
+                    key={i}
+                    className={cls}
+                    onClick={() => goToSlide(i)}
+                    onMouseEnter={() => {
+                      if (offset !== 0) {
+                        setTimeout(() => {
+                          goToSlide(i);
+                        }, 300); // ⏱ 300ms delay (change as you want)
+                      }
                     }}
-                  />
-                  <div className="image-overlay-text" />
-                  <div className="slide-content">
-                    <div className="slide-text-group">
-                      <div className="slide-icon">📦</div>
-                      <h2 className="slide-title heading-font">3D Box Customizer</h2>
-                      <p className="slide-desc">
-                        Design your perfect packaging with our interactive 3D customizer. Change colors, add logos, and see your design in real-time.
-                      </p>
+                    role="button"
+                    tabIndex={offset === 0 ? 0 : -1}
+                    aria-label={`Go to slide ${i + 1}: ${slide.title}`}
+                  >
+                    <div
+                      className="slide-card-bg"
+                      style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/${slide.img})` }}
+                    />
+                    <div className="slide-card-overlay" />
+                    <div className="slide-card-body">
+                      <span className="slide-card-count">{slide.num} / {FEATURE_SLIDE_COUNT}</span>
+                      <div className="slide-card-icon">{slide.icon}</div>
+                      <h3 className="slide-card-title heading-font">{slide.title}</h3>
+                      <p className="slide-card-desc">{slide.desc}</p>
                     </div>
                   </div>
-                  <div className="feature-tag">Feature <span className="font-mono">1</span> of 6</div>
-                </div>
+                );
+              })}
 
-                {/* SLIDE 2 */}
-                <div className="slide">
-                  <div className="slide-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/2.jpeg)` }} />
-                  <div className="image-overlay-text" />
-                  <div className="slide-content">
-                    <div className="slide-text-group">
-                      <div className="slide-icon">🍃</div>
-                      <h2 className="slide-title heading-font">Eco Mailer Boxes</h2>
-                      <p className="slide-desc">
-                        Sustainable kraft mailers with 100% recycled materials. Fast, secure, and planet-friendly.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="feature-tag">Feature <span className="font-mono">2</span> of 6</div>
-                </div>
+            </div>
 
-                {/* SLIDE 3 */}
-                <div className="slide">
-                  <div className="slide-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/3.jpeg)` }} />
-                  <div className="image-overlay-text" />
-                  <div className="slide-content">
-                    <div className="slide-text-group">
-                      <div className="slide-icon">🎁</div>
-                      <h2 className="slide-title heading-font">Premium Packaging</h2>
-                      <p className="slide-desc">
-                        High-quality boxes, mailers, and custom solutions designed to protect your products and elevate your brand.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="feature-tag">Feature <span className="font-mono">3</span> of 6</div>
-                </div>
-
-                {/* SLIDE 4 */}
-                <div className="slide">
-                  <div className="slide-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/4.jpeg)` }} />
-                  <div className="image-overlay-text" />
-                  <div className="slide-content">
-                    <div className="slide-text-group">
-                      <div className="slide-icon">🚛</div>
-                      <h2 className="slide-title heading-font">Fast Shipping</h2>
-                      <p className="slide-desc">
-                        Quick turnaround times with reliable shipping options. Track your orders every step of the way.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="feature-tag">Feature <span className="font-mono">4</span> of 6</div>
-                </div>
-
-                {/* SLIDE 5 */}
-                <div className="slide">
-                  <div className="slide-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/5.jpeg)` }} />
-                  <div className="image-overlay-text" />
-                  <div className="slide-content">
-                    <div className="slide-text-group">
-                      <div className="slide-icon">⚡️</div>
-                      <h2 className="slide-title heading-font">Easy Ordering</h2>
-                      <p className="slide-desc">
-                        Simple online ordering process with flexible quantities and competitive pricing for businesses of all sizes.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="feature-tag">Feature <span className="font-mono">5</span> of 6</div>
-                </div>
-
-                {/* SLIDE 6 */}
-                <div className="slide">
-                  <div className="slide-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/6.jpeg)` }} />
-                  <div className="image-overlay-text" />
-                  <div className="slide-content">
-                    <div className="slide-text-group">
-                      <div className="slide-icon">🎨</div>
-                      <h2 className="slide-title heading-font">Custom Branding</h2>
-                      <p className="slide-desc">
-                        Upload your logo, choose your colors, and create packaging that perfectly represents your brand.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="feature-tag">Feature <span className="font-mono">6</span> of 6</div>
-                </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={prevSlide}
-                className="arrow-btn arrow-left"
-                aria-label="Previous slide"
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                onClick={nextSlide}
-                className="arrow-btn arrow-right"
-                aria-label="Next slide"
-              >
-                ›
-              </button>
-
-              <div className="dots" aria-label="Choose feature slide">
+            <div className="slider-controls">
+              <button type="button" onClick={prevSlide} className="ctrl-btn" aria-label="Previous slide">‹</button>
+              <div className="ctrl-dots">
                 {Array.from({ length: FEATURE_SLIDE_COUNT }, (_, i) => (
                   <button
                     key={i}
                     type="button"
-                    className={`dot${slideIndex === i ? " dot--active" : ""}`}
+                    className={`ctrl-dot${slideIndex === i ? ' ctrl-dot--active' : ''}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => goToSlide(i)}
                   />
                 ))}
               </div>
+              <button type="button" onClick={nextSlide} className="ctrl-btn" aria-label="Next slide">›</button>
             </div>
           </div>
         </section>
+
 
         {/* FINAL CTA */}
         <section className="enhanced-cta">

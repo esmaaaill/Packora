@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useStore } from '../../../store/useStore'
 import LayersPanel from './LayersPanel'
 
@@ -24,6 +24,50 @@ export default function LeftSidebar() {
     material, setMaterial,
     quantity, setQuantity,
   } = useStore()
+
+  const [localLength, setLocalLength] = useState(String(boxDimensions.length))
+  const [localWidth, setLocalWidth] = useState(String(boxDimensions.width))
+  const [localHeight, setLocalHeight] = useState(String(boxDimensions.height))
+  const [activeField, setActiveField] = useState(null)
+
+  useEffect(() => {
+    if (activeField !== 'length') setLocalLength(String(boxDimensions.length))
+  }, [boxDimensions.length, activeField])
+
+  useEffect(() => {
+    if (activeField !== 'width') setLocalWidth(String(boxDimensions.width))
+  }, [boxDimensions.width, activeField])
+
+  useEffect(() => {
+    if (activeField !== 'height') setLocalHeight(String(boxDimensions.height))
+  }, [boxDimensions.height, activeField])
+
+  const handleDimChange = (dim, val) => {
+    if (dim === 'length') setLocalLength(val)
+    if (dim === 'width') setLocalWidth(val)
+    if (dim === 'height') setLocalHeight(val)
+
+    const parsed = parseFloat(val)
+    if (!isNaN(parsed)) {
+      setBoxDimensions({ [dim]: parsed })
+    }
+  }
+
+  const handleDimBlur = (dim) => {
+    setActiveField(null)
+    let currentVal = ''
+    if (dim === 'length') currentVal = localLength
+    if (dim === 'width') currentVal = localWidth
+    if (dim === 'height') currentVal = localHeight
+
+    const parsed = parseFloat(currentVal)
+    if (currentVal === '' || isNaN(parsed) || parsed <= 0) {
+      const fallback = boxDimensions[dim]
+      if (dim === 'length') setLocalLength(String(fallback))
+      if (dim === 'width') setLocalWidth(String(fallback))
+      if (dim === 'height') setLocalHeight(String(fallback))
+    }
+  }
 
   return (
     <aside className="glass-panel sidebar-panel flex h-full min-h-0 w-[320px] shrink-0 flex-col overflow-hidden">
@@ -105,21 +149,30 @@ export default function LeftSidebar() {
                 Dimensions (centimeter)
               </label>
               <div className="space-y-2">
-                {['length', 'width', 'height'].map(dim => (
-                  <div key={dim} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5 shadow-sm transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20">
-                    <span className="text-xs text-muted-foreground font-medium capitalize w-16">{dim}</span>
-                    <input
-                      type="number"
-                      min={1}
-                      max={72}
-                      step={0.5}
-                      value={boxDimensions[dim]}
-                      onChange={e => setBoxDimensions({ [dim]: parseFloat(e.target.value) || 1 })}
-                      className="w-16 bg-transparent text-sm font-bold text-foreground focus:outline-none text-right"
-                    />
-                    <span className="text-xs text-muted-foreground ml-2">cm</span>
-                  </div>
-                ))}
+                {['length', 'width', 'height'].map(dim => {
+                  let val = '';
+                  if (dim === 'length') val = localLength;
+                  if (dim === 'width') val = localWidth;
+                  if (dim === 'height') val = localHeight;
+
+                  return (
+                    <div key={dim} className="flex items-center justify-between rounded-xl border border-border bg-white px-3 py-2.5 shadow-sm transition-colors focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20">
+                      <span className="text-xs text-muted-foreground font-medium capitalize w-16">{dim}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={72}
+                        step={0.5}
+                        value={val}
+                        onFocus={() => setActiveField(dim)}
+                        onBlur={() => handleDimBlur(dim)}
+                        onChange={e => handleDimChange(dim, e.target.value)}
+                        className="w-16 bg-transparent text-sm font-bold text-foreground focus:outline-none text-right"
+                      />
+                      <span className="text-xs text-muted-foreground ml-2">cm</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

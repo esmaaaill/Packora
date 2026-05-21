@@ -63,8 +63,100 @@ export default function RightSidebar() {
   const [panelTarget, setPanelTarget] = useState('selected')
   const propertiesPanelRef = useRef(null)
 
+  const [localX, setLocalX] = useState('')
+  const [localY, setLocalY] = useState('')
+  const [localW, setLocalW] = useState('')
+  const [localH, setLocalH] = useState('')
+  const [localFS, setLocalFS] = useState('')
+  const [focusedField, setFocusedField] = useState(null)
+
   const elements = designs[selectedFace].elements
   const selectedEl = selectedElementId ? elements.find(el => el.id === selectedElementId) : null
+
+  useEffect(() => {
+    if (selectedEl) {
+      if (focusedField !== 'x') setLocalX(String(Math.round(selectedEl.x)))
+      if (focusedField !== 'y') setLocalY(String(Math.round(selectedEl.y)))
+      if (focusedField !== 'width') setLocalW(String(Math.round(selectedEl.width)))
+      if (focusedField !== 'height') setLocalH(String(Math.round(selectedEl.height)))
+      if (focusedField !== 'fontSize') setLocalFS(String(selectedEl.fontSize || 24))
+    } else {
+      setLocalX('')
+      setLocalY('')
+      setLocalW('')
+      setLocalH('')
+      setLocalFS('')
+    }
+  }, [
+    selectedEl?.x,
+    selectedEl?.y,
+    selectedEl?.width,
+    selectedEl?.height,
+    selectedEl?.fontSize,
+    selectedElementId,
+    focusedField
+  ])
+
+  const handleXChange = (val) => {
+    setLocalX(val)
+    const parsed = parseFloat(val)
+    if (!isNaN(parsed)) {
+      update('x', parsed)
+    }
+  }
+
+  const handleYChange = (val) => {
+    setLocalY(val)
+    const parsed = parseFloat(val)
+    if (!isNaN(parsed)) {
+      update('y', parsed)
+    }
+  }
+
+  const handleWChange = (val) => {
+    setLocalW(val)
+    const parsed = parseFloat(val)
+    if (!isNaN(parsed)) {
+      update('width', parsed)
+    }
+  }
+
+  const handleHChange = (val) => {
+    setLocalH(val)
+    const parsed = parseFloat(val)
+    if (!isNaN(parsed)) {
+      update('height', parsed)
+    }
+  }
+
+  const handleFSChange = (val) => {
+    setLocalFS(val)
+    const parsed = parseInt(val)
+    if (!isNaN(parsed)) {
+      update('fontSize', parsed)
+    }
+  }
+
+  const handleBlur = (field, fallback) => {
+    setFocusedField(null)
+    let currentVal = ''
+    if (field === 'x') currentVal = localX
+    if (field === 'y') currentVal = localY
+    if (field === 'width') currentVal = localW
+    if (field === 'height') currentVal = localH
+    if (field === 'fontSize') currentVal = localFS
+
+    const parsed = parseFloat(currentVal)
+    if (currentVal === '' || isNaN(parsed)) {
+      const fieldName = field === 'width' ? 'width' : field === 'height' ? 'height' : field === 'fontSize' ? 'fontSize' : field
+      update(fieldName, fallback)
+      if (field === 'x') setLocalX(String(fallback))
+      if (field === 'y') setLocalY(String(fallback))
+      if (field === 'width') setLocalW(String(fallback))
+      if (field === 'height') setLocalH(String(fallback))
+      if (field === 'fontSize') setLocalFS(String(fallback))
+    }
+  }
   const bgColor = designs[selectedFace].backgroundColor
 
   const targetId = panelTarget === 'selected' ? selectedFace : panelTarget
@@ -280,8 +372,10 @@ export default function RightSidebar() {
                     <span className="text-[10px] text-muted-foreground">X</span>
                     <input
                       type="number"
-                      value={Math.round(selectedEl.x)}
-                      onChange={e => update('x', parseFloat(e.target.value) || 0)}
+                      value={localX}
+                      onFocus={() => setFocusedField('x')}
+                      onBlur={() => handleBlur('x', 0)}
+                      onChange={e => handleXChange(e.target.value)}
                       className="w-full bg-muted border border-border/60 rounded px-2 py-1.5 text-xs text-foreground
                           focus:outline-none focus:border-primary"
                     />
@@ -290,8 +384,10 @@ export default function RightSidebar() {
                     <span className="text-[10px] text-muted-foreground">Y</span>
                     <input
                       type="number"
-                      value={Math.round(selectedEl.y)}
-                      onChange={e => update('y', parseFloat(e.target.value) || 0)}
+                      value={localY}
+                      onFocus={() => setFocusedField('y')}
+                      onBlur={() => handleBlur('y', 0)}
+                      onChange={e => handleYChange(e.target.value)}
                       className="w-full bg-muted border border-border/60 rounded px-2 py-1.5 text-xs text-foreground
                           focus:outline-none focus:border-primary"
                     />
@@ -307,8 +403,10 @@ export default function RightSidebar() {
                     <span className="text-[10px] text-muted-foreground">W</span>
                     <input
                       type="number"
-                      value={Math.round(selectedEl.width)}
-                      onChange={e => update('width', parseFloat(e.target.value) || 10)}
+                      value={localW}
+                      onFocus={() => setFocusedField('width')}
+                      onBlur={() => handleBlur('width', 10)}
+                      onChange={e => handleWChange(e.target.value)}
                       className="w-full bg-muted border border-border/60 rounded px-2 py-1.5 text-xs text-foreground
                           focus:outline-none focus:border-primary"
                     />
@@ -317,8 +415,10 @@ export default function RightSidebar() {
                     <span className="text-[10px] text-muted-foreground">H</span>
                     <input
                       type="number"
-                      value={Math.round(selectedEl.height)}
-                      onChange={e => update('height', parseFloat(e.target.value) || 10)}
+                      value={localH}
+                      onFocus={() => setFocusedField('height')}
+                      onBlur={() => handleBlur('height', 10)}
+                      onChange={e => handleHChange(e.target.value)}
                       className="w-full bg-muted border border-border/60 rounded px-2 py-1.5 text-xs text-foreground
                           focus:outline-none focus:border-primary"
                     />
@@ -399,8 +499,10 @@ export default function RightSidebar() {
                       </select>
                       <input
                         type="number"
-                        value={selectedEl.fontSize}
-                        onChange={e => update('fontSize', parseInt(e.target.value) || 12)}
+                        value={localFS}
+                        onFocus={() => setFocusedField('fontSize')}
+                        onBlur={() => handleBlur('fontSize', 24)}
+                        onChange={e => handleFSChange(e.target.value)}
                         className="w-16 bg-muted border border-border/60 rounded px-2 py-1.5 text-xs text-foreground
                             focus:outline-none focus:border-primary"
                       />
