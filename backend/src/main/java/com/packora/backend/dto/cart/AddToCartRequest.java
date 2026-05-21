@@ -17,4 +17,6 @@ public class AddToCartRequest {
     private String selectedSize;
 
     private String selectedMaterial;
+
+    private Long customBoxConfigId;
 }

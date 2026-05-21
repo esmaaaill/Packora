@@ -6,10 +6,12 @@ import com.packora.backend.dto.cart.CartResponse;
 import com.packora.backend.exception.ResourceNotFoundException;
 import com.packora.backend.model.Cart;
 import com.packora.backend.model.CartItem;
+import com.packora.backend.model.CustomBoxConfig;
 import com.packora.backend.model.Product;
 import com.packora.backend.model.User;
 import com.packora.backend.repository.CartItemRepository;
 import com.packora.backend.repository.CartRepository;
+import com.packora.backend.repository.CustomBoxConfigRepository;
 import com.packora.backend.repository.ProductRepository;
 import com.packora.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +29,19 @@ public class CartServiceImpl implements CartService {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CustomBoxConfigRepository customBoxConfigRepository;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, 
                            CartItemRepository cartItemRepository, 
                            ProductRepository productRepository, 
-                           UserRepository userRepository) {
+                           UserRepository userRepository,
+                           CustomBoxConfigRepository customBoxConfigRepository) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+        this.customBoxConfigRepository = customBoxConfigRepository;
     }
 
     @Override
@@ -73,6 +78,15 @@ public class CartServiceImpl implements CartService {
             newItem.setQuantity(request.getQuantity());
             newItem.setSelectedSize(request.getSelectedSize());
             newItem.setSelectedMaterial(request.getSelectedMaterial());
+
+            // Link custom box configuration if provided
+            if (request.getCustomBoxConfigId() != null) {
+                CustomBoxConfig config = customBoxConfigRepository.findById(request.getCustomBoxConfigId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "CustomBoxConfig not found with id: " + request.getCustomBoxConfigId()));
+                newItem.setCustomBoxConfig(config);
+            }
+
             cart.addCartItem(newItem);
         }
 

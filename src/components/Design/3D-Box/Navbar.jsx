@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useStore } from '../../../store/useStore'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../../../context/CartContext'
-import { customBoxConfigApi } from '../../../utils/api'
+import { customBoxConfigApi, productApi } from '../../../utils/api'
 
 export default function Navbar() {
   const {
@@ -14,6 +14,7 @@ export default function Navbar() {
   const [saved, setSaved] = useState(false)
   const [saveError, setSaveError] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
+  const [customBoxProductId, setCustomBoxProductId] = useState(null)
 
   const navigate = useNavigate()
   const { addToCart } = useCart()
@@ -21,6 +22,20 @@ export default function Navbar() {
   const canUndo = historyIndex > 0
   const canRedo = historyIndex < history.length - 1
   const designCount = Object.values(designs).reduce((sum, face) => sum + face.elements.length, 0)
+
+  // Fetch the sentinel "Custom 3D Box" product ID on mount
+  useEffect(() => {
+    productApi.getByCategory('custom')
+      .then((products) => {
+        const customBox = products.find(p => p.name === 'Custom 3D Box');
+        if (customBox) {
+          setCustomBoxProductId(Number(customBox.id));
+        } else {
+          console.warn('Custom 3D Box product not found in catalog.');
+        }
+      })
+      .catch((err) => console.error('Failed to fetch custom box product:', err));
+  }, []);
 
   // Internal function to sync configuration with the backend
   const syncConfig = async (explicitSave = false) => {
@@ -77,6 +92,11 @@ export default function Navbar() {
   }
 
   const handleAddToCart = async () => {
+    if (!customBoxProductId) {
+      alert("Custom box product is not available. Please try again in a moment.");
+      return;
+    }
+
     setIsSyncing(true);
     try {
       // 1. Sync config with backend first
@@ -93,9 +113,9 @@ export default function Navbar() {
         thumbnail = canvas.toDataURL()
       }
 
-      // 3. Add to cart with configId
+      // 3. Add to cart with real product ID and configId
       await addToCart({
-        productId: 'custom-3d-box',
+        productId: customBoxProductId,
         name: 'Custom 3D Box',
         image: thumbnail,
         price: price,
@@ -108,7 +128,7 @@ export default function Navbar() {
       navigate('/Cart')
     } catch (error) {
       console.error("Failed to add to cart:", error);
-      alert("Failed to synchronize design with server. Please try again.");
+      alert("Failed to add design to cart. Please try again.");
     } finally {
       setIsSyncing(false);
     }

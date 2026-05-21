@@ -1,7 +1,9 @@
 package com.packora.backend.config;
 
 import com.packora.backend.model.Admin;
+import com.packora.backend.model.Product;
 import com.packora.backend.model.SupportStaff;
+import com.packora.backend.repository.ProductRepository;
 import com.packora.backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,11 +16,16 @@ public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
+    /** The well-known product name used by the 3D Box Design editor for cart integration. */
+    public static final String CUSTOM_BOX_PRODUCT_NAME = "Custom 3D Box";
+
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, ProductRepository productRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.productRepository = productRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -26,6 +33,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) throws Exception {
         seedAdminUser();
         seedSupportUsers();
+        seedCustomBoxProduct();
     }
 
     private void seedAdminUser() {
@@ -83,5 +91,30 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(support2);
             log.info("Default Support user 2 seeded successfully.");
         }
+    }
+
+    /**
+     * Seeds a sentinel "Custom 3D Box" product that serves as the product reference
+     * for user-designed custom boxes from the 3D editor. The price is set to 0 because
+     * the actual price is computed dynamically from the packaging quote API.
+     */
+    private void seedCustomBoxProduct() {
+        productRepository.findByName(CUSTOM_BOX_PRODUCT_NAME).ifPresentOrElse(
+            existing -> log.info("Custom Box product already exists (id={}). Skipping seeding.", existing.getId()),
+            () -> {
+                log.info("Seeding sentinel product: {}", CUSTOM_BOX_PRODUCT_NAME);
+                Product customBox = new Product();
+                customBox.setName(CUSTOM_BOX_PRODUCT_NAME);
+                customBox.setDescription("A fully customizable 3D packaging box designed in the Packora editor.");
+                customBox.setPrice(0.0);
+                customBox.setCategory("custom");
+                customBox.setInStock(true);
+                customBox.setStock(999999);
+                customBox.setMinOrder(1);
+                customBox.setImageUrl("");
+                Product saved = productRepository.save(customBox);
+                log.info("Sentinel product '{}' seeded with id={}.", CUSTOM_BOX_PRODUCT_NAME, saved.getId());
+            }
+        );
     }
 }
