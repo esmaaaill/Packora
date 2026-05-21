@@ -55,9 +55,12 @@ public class PasswordResetService {
                 emailService.sendPasswordResetEmail(userEmail, tokenValue, frontendUrl);
                 log.info("Password reset email sent to {}", userEmail);
             } catch (Exception ex) {
-                // Token is already committed — log the SMTP error but don't fail the request.
-                log.error("SMTP error sending reset email to {}: {}. [LOCAL DEV FALLBACK] Reset link: {}/reset-password?token={}", 
-                          userEmail, ex.getMessage(), frontendUrl, tokenValue);
+                // Token is already committed to DB — log the SMTP failure in detail
+                // but don't propagate (controller returns 200 to prevent user-enumeration).
+                log.error("[PasswordResetService] SMTP failure for {}: [{}] {}",
+                          userEmail, ex.getClass().getSimpleName(), ex.getMessage());
+                log.error("[PasswordResetService] [LOCAL DEV FALLBACK] Reset link: {}/reset-password?token={}",
+                          frontendUrl, tokenValue);
             }
         }
     }

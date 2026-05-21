@@ -25,9 +25,9 @@ public class PasswordResetToken {
     @Column(nullable = false, unique = true)
     private String token;
 
-    /** The user this token belongs to */
+    /** The user this token belongs to — one active token per user at a time */
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     /** When this token becomes invalid */

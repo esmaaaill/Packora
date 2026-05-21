@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, Package } from 'lucide-react';
+import { CheckCircle, Package, ShoppingBag } from 'lucide-react';
 import './PaymentResult.css';
 
 /**
@@ -13,22 +13,12 @@ import './PaymentResult.css';
  *   http://localhost:3000/payment/success?txn=<txnId>
  *
  * This component reads the ?txn= param for display purposes.
+ * The page stays visible until the user manually navigates away.
  */
 export default function PaymentSuccess() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const txnId     = params.get('txn');
-
-  // Auto-redirect to Track after 5 seconds
-  const [countdown, setCountdown] = useState(5);
-  useEffect(() => {
-    if (countdown <= 0) {
-      navigate('/Track');
-      return;
-    }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [countdown, navigate]);
+  const txnId = params.get('txn');
 
   return (
     <div className="payment-result-page payment-result-success">
@@ -46,15 +36,20 @@ export default function PaymentSuccess() {
             Transaction Reference: <strong>{txnId}</strong>
           </p>
         )}
-        <p className="payment-result-countdown">
-          Redirecting to your orders in <strong>{countdown}s</strong>…
-        </p>
-        <button
-          className="payment-result-btn"
-          onClick={() => navigate('/Track')}
-        >
-          <Package size={18} /> View My Orders
-        </button>
+        <div className="payment-result-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            className="payment-result-btn"
+            onClick={() => navigate('/Track')}
+          >
+            <Package size={18} /> View My Orders
+          </button>
+          <button
+            className="payment-result-btn secondary"
+            onClick={() => navigate('/Catalog')}
+          >
+            <ShoppingBag size={18} /> Continue Shopping
+          </button>
+        </div>
       </div>
     </div>
   );

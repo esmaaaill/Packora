@@ -25,16 +25,23 @@ export default function Checkout() {
   const { cartItems, checkoutStep, setCheckoutStep } = useCart();
   const [params] = useSearchParams();
 
+  // Read the step from the URL immediately (synchronous) to avoid a race
+  // condition where clearCart() runs before the useEffect can set 'review'.
+  const stepFromUrl = params.get('step');
+
   // If redirected from Paymob, the URL will have ?step=review
   useEffect(() => {
-    const stepFromUrl = params.get('step');
     if (stepFromUrl === 'review') {
       setCheckoutStep('review');
     }
-  }, [params, setCheckoutStep]);
+  }, [stepFromUrl, setCheckoutStep]);
+
+  // The effective step is whichever is more "advanced":
+  // URL param wins during the initial redirect (prevents the flash of empty cart)
+  const effectiveStep = stepFromUrl === 'review' ? 'review' : checkoutStep;
 
   // If cart is empty AND we aren't on the review step (which happens after clearing cart on success)
-  if (cartItems.length === 0 && checkoutStep !== 'review') {
+  if (cartItems.length === 0 && effectiveStep !== 'review') {
     return (
       <div className="checkout-page">
         <Navbar />
@@ -59,7 +66,7 @@ export default function Checkout() {
     }
   };
 
-  const stepIndex = STEPS.findIndex((s) => s.key === checkoutStep);
+  const stepIndex = STEPS.findIndex((s) => s.key === effectiveStep);
 
   return (
     <div className="checkout-page">
@@ -73,7 +80,7 @@ export default function Checkout() {
         <div className="checkout-steps">
           {STEPS.map((step, i) => {
             const Icon       = step.icon;
-            const isActive   = checkoutStep === step.key;
+            const isActive   = effectiveStep === step.key;
             const isComplete = stepIndex > i;
             return (
               <React.Fragment key={step.key}>
@@ -98,9 +105,9 @@ export default function Checkout() {
         </div>
 
         <div className="checkout-content">
-          {checkoutStep === 'shipping' && <ShippingAddress />}
-          {checkoutStep === 'payment'  && <Payment />}
-          {checkoutStep === 'review'   && <PaymentResult />}
+          {effectiveStep === 'shipping' && <ShippingAddress />}
+          {effectiveStep === 'payment'  && <Payment />}
+          {effectiveStep === 'review'   && <PaymentResult />}
         </div>
       </main>
       <Footer />

@@ -15,7 +15,11 @@
  *   });
  */
 
-export const API_BASE = 'http://localhost:8080';
+// Reads from the REACT_APP_API_BASE build-time env var (set via .env or docker-compose build args).
+// Falls back to http://localhost:8080 for plain local development without Docker.
+// When running inside Docker with the Nginx proxy, this is set to "" (empty string)
+// so all /api calls are relative and routed by Nginx to the backend container.
+export const API_BASE = process.env.REACT_APP_API_BASE ?? 'http://localhost:8080';
 const AUTH_STORAGE_KEY = 'packora_user_auth';
 
 /**

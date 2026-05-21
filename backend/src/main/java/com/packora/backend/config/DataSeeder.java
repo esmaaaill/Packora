@@ -29,20 +29,28 @@ public class DataSeeder implements CommandLineRunner {
     }
 
     private void seedAdminUser() {
-        String adminEmail = "adminpackora@gmail.com";
+        String adminEmail    = "adminpackora@gmail.com";
         String adminUsername = "admin";
-        if (userRepository.existsByEmail(adminEmail) || userRepository.existsByUsername(adminUsername)) {
-            log.info("Admin user (email: {} or username: {}) already exists. Skipping seeding.", adminEmail, adminUsername);
-        } else {
-            log.info("Seeding default Admin user: {}", adminEmail);
-            Admin admin = new Admin();
-            admin.setUsername(adminUsername);
-            admin.setEmail(adminEmail);
-            admin.setPassword(passwordEncoder.encode("Packora@Admin2026"));
-            admin.setPermissionsLevel("ALL");
-            userRepository.save(admin);
-            log.info("Default Admin user seeded successfully.");
-        }
+        String adminPassword = "Packora@Admin2026";
+
+        userRepository.findByUsername(adminUsername).ifPresentOrElse(
+            existingAdmin -> {
+                // Always sync the password so this deployment matches the expected credentials
+                existingAdmin.setPassword(passwordEncoder.encode(adminPassword));
+                userRepository.save(existingAdmin);
+                log.info("Admin user already exists — password synced for username: {}", adminUsername);
+            },
+            () -> {
+                log.info("Seeding default Admin user: {}", adminEmail);
+                Admin admin = new Admin();
+                admin.setUsername(adminUsername);
+                admin.setEmail(adminEmail);
+                admin.setPassword(passwordEncoder.encode(adminPassword));
+                admin.setPermissionsLevel("ALL");
+                userRepository.save(admin);
+                log.info("Default Admin user seeded successfully.");
+            }
+        );
     }
 
     private void seedSupportUsers() {

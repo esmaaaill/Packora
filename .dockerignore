@@ -1,0 +1,35 @@
+# Frontend Docker ignore
+# Keep the build context small
+
+# Dependencies (installed fresh inside Docker)
+node_modules/
+
+# Git
+.git
+.gitignore
+
+# Build output (built fresh inside Docker)
+build/
+
+# Backend source (not needed for frontend image)
+backend/
+
+# IDE and OS files
+.idea
+.vscode
+.DS_Store
+*.swp
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+
+# Test reports, coverage
+coverage/
+
+# Other
+*.log

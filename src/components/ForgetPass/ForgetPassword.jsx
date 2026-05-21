@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Package, Mail, ArrowLeft, Loader } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_BASE as BASE_URL } from '../../utils/api';
 import './ForgetPassword.css';
 
-const API_BASE = 'http://localhost:8080/api/auth';
+const API_BASE = `${BASE_URL}/api/auth`;
 
 export default function ForgetPassword() {
   const [email, setEmail]       = useState('');

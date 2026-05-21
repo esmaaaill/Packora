@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Lock, Eye, EyeOff, Loader, CheckCircle, XCircle } from 'lucide-react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { API_BASE as BASE_URL } from '../../utils/api';
 import './ResetPassword.css';
 
-const API_BASE = 'http://localhost:8080/api/auth';
+const API_BASE = `${BASE_URL}/api/auth`;
 
 export default function ResetPassword() {
   const [searchParams]              = useSearchParams();

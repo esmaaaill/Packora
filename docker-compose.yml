@@ -1,0 +1,102 @@
+# ═══════════════════════════════════════════════════════════════
+#  Packora – docker-compose.yml
+#
+#  Services:
+#    backend  – Spring Boot API (port 8080)
+#    frontend – React SPA served by Nginx (port 3000)
+#
+#  Database:
+#    Supabase (remote, managed PostgreSQL) — no local DB service needed.
+#    Connection is controlled entirely by environment variables passed
+#    to the backend container.
+#
+#  Usage:
+#    1. Copy backend/.env.example → backend/.env and fill in your secrets.
+#    2. docker compose up --build
+#    3. Open http://localhost:3000
+# ═══════════════════════════════════════════════════════════════
+
+services:
+
+  # ─────────────────────────────────────────────────────────────
+  # Spring Boot Backend
+  # ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend          # Build context is the backend directory
+      dockerfile: Dockerfile
+    image: packora-backend:latest
+    container_name: packora-backend
+
+    # All secrets are loaded from backend/.env (not committed to git)
+    env_file:
+      - ./backend/.env
+
+    # Explicit environment overrides / non-secret config
+    environment:
+      # Tell Spring Boot to run on port 8080 (matches application.properties)
+      SERVER_PORT: 8080
+      # Frontend URL for CORS and password-reset email links
+      FRONTEND_URL: http://localhost:3000
+
+    ports:
+      # Expose backend directly for local development / debugging / Paymob tunnels
+      - "8080:8080"
+
+    volumes:
+      # Persist uploaded files (product images, designs) across container restarts
+      - uploads-data:/app/uploads
+
+    networks:
+      - packora-net
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s      # Spring Boot takes a moment to start
+
+  # ─────────────────────────────────────────────────────────────
+  # React Frontend (Nginx)
+  # ─────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .                  # Build context is the project root
+      dockerfile: Dockerfile
+      args:
+        # At build-time, tell the React app where the backend lives.
+        # Inside Docker, Nginx proxies /api → backend:8080, so the
+        # browser just calls the same origin (no CORS) when using port 3000.
+        # This value is baked into the JS bundle at build time.
+        REACT_APP_API_BASE: ""    # Empty = use relative URLs (handled by Nginx proxy)
+    image: packora-frontend:latest
+    container_name: packora-frontend
+
+    ports:
+      - "3000:80"                 # Access the app at http://localhost:3000
+
+    networks:
+      - packora-net
+
+    depends_on:
+      backend:
+        condition: service_healthy  # Wait until backend passes its health check
+
+    restart: unless-stopped
+
+# ─────────────────────────────────────────────────────────────
+# Shared network
+# ─────────────────────────────────────────────────────────────
+networks:
+  packora-net:
+    driver: bridge
+
+# ─────────────────────────────────────────────────────────────
+# Named volumes
+# ─────────────────────────────────────────────────────────────
+volumes:
+  uploads-data:
+    driver: local
