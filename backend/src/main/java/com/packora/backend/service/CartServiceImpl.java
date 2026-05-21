@@ -14,6 +14,12 @@ import com.packora.backend.repository.CartRepository;
 import com.packora.backend.repository.CustomBoxConfigRepository;
 import com.packora.backend.repository.ProductRepository;
 import com.packora.backend.repository.UserRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.packora.backend.dto.packaging.QuoteRequest;
+import com.packora.backend.dto.packaging.QuoteResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,23 +31,31 @@ import java.util.stream.Collectors;
 @Service
 public class CartServiceImpl implements CartService {
 
+    private static final Logger log = LoggerFactory.getLogger(CartServiceImpl.class);
+
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CustomBoxConfigRepository customBoxConfigRepository;
+    private final PackagingService packagingService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, 
                            CartItemRepository cartItemRepository, 
                            ProductRepository productRepository, 
                            UserRepository userRepository,
-                           CustomBoxConfigRepository customBoxConfigRepository) {
+                           CustomBoxConfigRepository customBoxConfigRepository,
+                           PackagingService packagingService,
+                           ObjectMapper objectMapper) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.customBoxConfigRepository = customBoxConfigRepository;
+        this.packagingService = packagingService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -153,14 +167,22 @@ public class CartServiceImpl implements CartService {
     private CartResponse mapToResponse(Cart cart) {
         List<CartItemResponse> itemResponses = cart.getCartItems().stream()
                 .map(item -> {
-                    Double totalItemPrice = item.getProduct().getPrice() * item.getQuantity();
+                    Double unitPrice = item.getProduct().getPrice();
+                    if (item.getCustomBoxConfig() != null) {
+                        try {
+                            unitPrice = calculateCustomBoxUnitPrice(item);
+                        } catch (Exception e) {
+                            log.error("Fallback to default catalog price for cart item id={}", item.getId(), e);
+                        }
+                    }
+                    Double totalItemPrice = unitPrice * item.getQuantity();
                     return new CartItemResponse(
                             item.getId(),
                             item.getProduct().getId(),
                             item.getProduct().getName(),
                             item.getProduct().getImageUrl(),
                             item.getQuantity(),
-                            item.getProduct().getPrice(),
+                            unitPrice,
                             item.getSelectedSize(),
                             item.getSelectedMaterial(),
                             totalItemPrice
@@ -173,5 +195,47 @@ public class CartServiceImpl implements CartService {
                 .sum();
 
         return new CartResponse(cart.getId(), itemResponses, totalPrice);
+    }
+
+    private Double calculateCustomBoxUnitPrice(CartItem item) {
+        try {
+            String json = item.getCustomBoxConfig().getConfigurationJson();
+            JsonNode root = objectMapper.readTree(json);
+
+            // Extract material from custom design, or fallback to selectedMaterial, or standard "corrugated"
+            String material = "corrugated";
+            if (root.has("material") && !root.get("material").asText().isEmpty()) {
+                material = root.get("material").asText();
+            } else if (item.getSelectedMaterial() != null && !item.getSelectedMaterial().isEmpty()) {
+                material = item.getSelectedMaterial();
+            }
+
+            // Extract dimensions (length, width, height)
+            double length = 15.0;
+            double width = 20.0;
+            double height = 30.0;
+            if (root.has("boxDimensions")) {
+                JsonNode dims = root.get("boxDimensions");
+                if (dims.has("length") && dims.get("length").isNumber()) length = dims.get("length").asDouble();
+                if (dims.has("width") && dims.get("width").isNumber()) width = dims.get("width").asDouble();
+                if (dims.has("height") && dims.get("height").isNumber()) height = dims.get("height").asDouble();
+            }
+
+            // Construct quote request
+            QuoteRequest quoteRequest = new QuoteRequest();
+            quoteRequest.setMaterial(material);
+            quoteRequest.setLength(length);
+            quoteRequest.setWidth(width);
+            quoteRequest.setHeight(height);
+            quoteRequest.setQuantity(item.getQuantity());
+            quoteRequest.setColor("natural"); // default color
+            quoteRequest.setType("Box");
+
+            QuoteResponse quote = packagingService.calculateQuote(quoteRequest);
+            return quote.getUnitPrice();
+        } catch (Exception e) {
+            log.error("Failed to calculate custom box unit price for cart item id={}", item.getId(), e);
+            return 0.0;
+        }
     }
 }
