@@ -2,7 +2,6 @@ package com.packora.backend.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;

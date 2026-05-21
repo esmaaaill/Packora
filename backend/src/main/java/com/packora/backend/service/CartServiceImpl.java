@@ -39,7 +39,7 @@ public class CartServiceImpl implements CartService {
     private final UserRepository userRepository;
     private final CustomBoxConfigRepository customBoxConfigRepository;
     private final PackagingService packagingService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     public CartServiceImpl(CartRepository cartRepository, 
@@ -47,15 +47,13 @@ public class CartServiceImpl implements CartService {
                            ProductRepository productRepository, 
                            UserRepository userRepository,
                            CustomBoxConfigRepository customBoxConfigRepository,
-                           PackagingService packagingService,
-                           ObjectMapper objectMapper) {
+                           PackagingService packagingService) {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.customBoxConfigRepository = customBoxConfigRepository;
         this.packagingService = packagingService;
-        this.objectMapper = objectMapper;
     }
 
     @Override

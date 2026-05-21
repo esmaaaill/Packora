@@ -55,29 +55,43 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
 
     @Override
     public List<RevenueChartResponse> getRevenueChart(int months) {
-        List<Order> allOrders = orderRepository.findAll();
-        
-        // Group by YearMonth
-        Map<YearMonth, List<Order>> ordersByMonth = allOrders.stream()
-                .filter(o -> o.getStatus() != OrderStatus.CANCELLED && o.getOrderDate() != null)
-                .collect(Collectors.groupingBy(o -> YearMonth.from(o.getOrderDate())));
+        // Calculate start date (first day of the month N months ago)
+        java.time.LocalDateTime startDate = java.time.LocalDateTime.now()
+                .minusMonths(months - 1)
+                .withDayOfMonth(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(0)
+                .withNano(0);
 
-        // Determine the range of months to return (last N months up to current month)
+        List<Object[]> dbResults = orderRepository.getMonthlyRevenue(startDate);
+
+        // Map results by formatted month key
+        Map<String, Object[]> resultsMap = dbResults.stream()
+                .collect(Collectors.toMap(
+                        row -> row[0].toString().trim(),
+                        row -> row,
+                        (existing, replacement) -> existing
+                ));
+
         YearMonth currentMonth = YearMonth.now();
         List<RevenueChartResponse> chart = new ArrayList<>();
-        
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM yyyy"); // "May 2026" / "Jan 2026"
 
         for (int i = months - 1; i >= 0; i--) {
             YearMonth ym = currentMonth.minusMonths(i);
-            List<Order> monthlyOrders = ordersByMonth.getOrDefault(ym, new ArrayList<>());
-            
-            long orderCount = monthlyOrders.size();
-            double revenue = monthlyOrders.stream()
-                    .mapToDouble(Order::getTotalAmount)
-                    .sum();
-            
-            chart.add(new RevenueChartResponse(ym.format(formatter), orderCount, revenue));
+            String monthKey = ym.format(formatter); // e.g. "May 2026"
+
+            long orderCount = 0;
+            double revenue = 0.0;
+
+            if (resultsMap.containsKey(monthKey)) {
+                Object[] row = resultsMap.get(monthKey);
+                orderCount = ((Number) row[1]).longValue();
+                revenue = ((Number) row[2]).doubleValue();
+            }
+
+            chart.add(new RevenueChartResponse(monthKey, orderCount, revenue));
         }
 
         return chart;
@@ -109,7 +123,7 @@ public class AdminAnalyticsServiceImpl implements AdminAnalyticsService {
                 .userName(order.getUser().getUsername())
                 .userEmail(order.getUser().getEmail())
                 .orderDate(order.getOrderDate())
-                .status(order.getStatus().name())
+                .status(order.getStatus().name().toLowerCase())
                 .totalAmount(order.getTotalAmount())
                 .shippingAddress(order.getShippingAddress())
                 .build();
