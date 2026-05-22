@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { TypeAnimation } from "react-type-animation";
+import { motion } from "framer-motion";
+import { gsap } from "gsap";
 import "./LandingPage.css";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
@@ -128,23 +131,59 @@ const LandingPage = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Mouse tilt for hero cube */
-  const cubeRef = useRef(null);
-  const handleCubeMouseMove = useCallback((e) => {
-    if (!cubeRef.current) return;
-    const rect = cubeRef.current.getBoundingClientRect();
+  /* Tall Box Hover & Inspections */
+  const boxRef = useRef(null);
+  const boxInteractiveRef = useRef(null);
+  const shadowRef = useRef(null);
+
+  const handleBoxMouseMove = useCallback((e) => {
+    if (!boxInteractiveRef.current || !boxRef.current) return;
+    
+    // Pause Y auto-rotation
+    boxRef.current.classList.add("lp-box--paused");
+    
+    const rect = e.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const x = (e.clientX - cx) / (rect.width / 2);
-    const y = (e.clientY - cy) / (rect.height / 2);
-    cubeRef.current.style.setProperty("--rx", `${-y * 12 - 28}deg`);
-    cubeRef.current.style.setProperty("--ry", `${x * 12 + 42}deg`);
-  }, []);
-  const handleCubeMouseLeave = useCallback(() => {
-    if (cubeRef.current) {
-      cubeRef.current.style.setProperty("--rx", "-28deg");
-      cubeRef.current.style.setProperty("--ry", "42deg");
+    const x = (e.clientX - cx) / (rect.width / 2); // -1 to 1
+    const y = (e.clientY - cy) / (rect.height / 2); // -1 to 1
+    
+    const rotateY = x * 35; // inspect up to 35 deg Y
+    const rotateX = -y * 25; // inspect up to 25 deg X
+    
+    boxInteractiveRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    
+    // Animate ground shadow scale and placement
+    if (shadowRef.current) {
+      const shadowScale = 1 - Math.abs(x) * 0.15;
+      const shadowX = x * 20;
+      shadowRef.current.style.transform = `translateX(-50%) translate(${shadowX}px, 0) scale(${shadowScale})`;
+      shadowRef.current.style.opacity = `${0.6 - Math.abs(y) * 0.2}`;
     }
+  }, []);
+
+  const handleBoxMouseLeave = useCallback(() => {
+    if (!boxInteractiveRef.current || !boxRef.current) return;
+    
+    // Use GSAP to smoothly animate interactive wrapper back to 0
+    gsap.to(boxInteractiveRef.current, {
+      transform: "rotateX(0deg) rotateY(0deg)",
+      duration: 0.8,
+      ease: "power2.out",
+      onComplete: () => {
+        if (boxRef.current) {
+          boxRef.current.classList.remove("lp-box--paused");
+        }
+      }
+    });
+    
+    // Reset ground shadow
+    gsap.to(shadowRef.current, {
+      transform: "translateX(-50%) scale(1)",
+      opacity: 0.4,
+      duration: 0.8,
+      ease: "power2.out"
+    });
   }, []);
 
   /* Slider auto-play */
@@ -169,83 +208,160 @@ const LandingPage = () => {
 
       {/* ──────── HERO ──────── */}
       <section id="hero" className="lp-hero" ref={heroRef}>
-        <div className="lp-hero__bg-orb lp-hero__bg-orb--1" />
-        <div className="lp-hero__bg-orb lp-hero__bg-orb--2" />
+        {/* Animated Gradient Mesh Background Blobs */}
+        <div className="lp-mesh-bg">
+          <div className="lp-mesh-blob lp-mesh-blob--1" />
+          <div className="lp-mesh-blob lp-mesh-blob--2" />
+          <div className="lp-mesh-blob lp-mesh-blob--3" />
+          <div className="lp-mesh-blob lp-mesh-blob--4" />
+          <div className="lp-mesh-blob lp-mesh-blob--5" />
+        </div>
         <div className="lp-hero__noise" />
 
         <div className="lp-hero__container">
           <div className="lp-hero__grid">
             {/* Left */}
             <div className={`lp-hero__left ${heroInView ? "in-view" : ""}`} style={{ transform: `translateY(${scrollY * 0.08}px)` }}>
-              <div className="lp-hero__badge lp-fade-up" style={{ "--delay": "0s" }}>
-                <span className="lp-hero__badge-dot" />
-                REAL-TIME 3D • CUSTOM PACKAGING
-              </div>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+              >
+                <div className="lp-hero__badge lp-fade-up" style={{ "--delay": "0s" }}>
+                  <span className="lp-hero__badge-dot" />
+                  REAL-TIME 3D • PREMIUM UNBOXING
+                </div>
 
-              <h1 className="lp-hero__title">
-                <span className="lp-fade-up" style={{ "--delay": "0.1s" }}>PACKAGING THAT</span>
-                <span className="lp-hero__title-accent lp-fade-up" style={{ "--delay": "0.2s" }}>DEFINES YOUR BRAND.</span>
-              </h1>
+                <h1 className="lp-hero__title">
+                  <span className="lp-fade-up" style={{ "--delay": "0.1s" }}>The smarter way to</span>
+                  <span className="lp-hero__title-accent lp-fade-up" style={{ "--delay": "0.2s" }}>
+                    <TypeAnimation
+                      sequence={[
+                        "design your packaging.",
+                        1200,
+                        "build your brand box.",
+                        1200,
+                        "customize your wrapping.",
+                        1200,
+                        "ship your products.",
+                        1200,
+                        "seal every order.",
+                        1200,
+                        "deliver the unboxing.",
+                        1200,
+                      ]}
+                      wrapper="span"
+                      speed={50}
+                      style={{ display: "inline-block" }}
+                      repeat={Infinity}
+                      cursor={true}
+                      className="lp-hero__title-typing"
+                    />
+                  </span>
+                </h1>
 
-              <p className="lp-hero__desc lp-fade-up" style={{ "--delay": "0.3s" }}>
-                Elegant 3D box preview. Infinite customization.<br />
-                Built live for you.
-              </p>
+                <p className="lp-hero__desc lp-fade-up" style={{ "--delay": "0.3s" }}>
+                  Elegant 3D studio experience. Portrait ratios & premium materials.<br />
+                  Engineered live for your brand.
+                </p>
 
-              <div className="lp-hero__cta-group lp-fade-up" style={{ "--delay": "0.4s" }}>
-                <button
-                  type="button"
-                  onClick={() => requireLogin(() => navigate("/Design"))}
-                  className="lp-btn lp-btn--primary"
-                  id="hero-cta-customize"
-                >
-                  <span>Start Customizing</span>
-                  <ArrowRight size={20} />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => requireLogin(() => navigate("/Catalog"))}
-                  className="lp-btn lp-btn--outline"
-                  id="hero-cta-catalog"
-                >
-                  Explore Catalogue
-                </button>
-              </div>
+                <div className="lp-hero__cta-group lp-fade-up" style={{ "--delay": "0.4s" }}>
+                  <button
+                    type="button"
+                    onClick={() => requireLogin(() => navigate("/Design"))}
+                    className="lp-btn lp-btn--primary"
+                    id="hero-cta-customize"
+                  >
+                    <span>Start Customizing</span>
+                    <ArrowRight size={20} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => requireLogin(() => navigate("/Catalog"))}
+                    className="lp-btn lp-btn--outline"
+                    id="hero-cta-catalog"
+                  >
+                    Explore Catalogue
+                  </button>
+                </div>
 
-              <div className="lp-hero__benefits lp-fade-up" style={{ "--delay": "0.5s" }}>
-                {["Premium Materials", "Ships in 7 Days", "Real-time 3D Preview", "Drag & Drop Ready"].map((b) => (
-                  <div key={b} className="lp-hero__benefit">
-                    <span className="lp-hero__benefit-dot" />
-                    {b}
-                  </div>
-                ))}
-              </div>
+                <div className="lp-hero__benefits lp-fade-up" style={{ "--delay": "0.5s" }}>
+                  {["Premium Materials", "Ships in 7 Days", "Real-time 3D Preview", "Drag & Drop Ready"].map((b) => (
+                    <div key={b} className="lp-hero__benefit">
+                      <span className="lp-hero__benefit-dot" />
+                      {b}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
             </div>
 
-            {/* Right — 3D Cube */}
+            {/* Right — 3D Tall Vertical Packaging Box */}
             <div
               className={`lp-hero__right ${heroInView ? "in-view" : ""}`}
               style={{ transform: `translateY(${scrollY * -0.06}px)` }}
             >
               <div
-                className="lp-cube-wrapper"
-                ref={cubeRef}
-                onMouseMove={handleCubeMouseMove}
-                onMouseLeave={handleCubeMouseLeave}
+                className="lp-box-wrapper"
+                onMouseMove={handleBoxMouseMove}
+                onMouseLeave={handleBoxMouseLeave}
               >
-                <div className="lp-cube-perspective">
-                  <div className="lp-cube">
-                    <div className="lp-face lp-face--front"><Package size={48} /></div>
-                    <div className="lp-face lp-face--back" />
-                    <div className="lp-face lp-face--right" />
-                    <div className="lp-face lp-face--left" />
-                    <div className="lp-face lp-face--top" />
-                    <div className="lp-face lp-face--bottom" />
+                <div className="lp-box-perspective">
+                  <div className="lp-box-interactive-wrapper" ref={boxInteractiveRef}>
+                    <div className="lp-tall-box" ref={boxRef}>
+                      {/* Front face with premium design elements and Packora brand */}
+                      <div className="lp-box-face lp-box-face--front">
+                        <div className="lp-box-label">
+                          <Package size={36} className="lp-box-logo-icon" />
+                          <span className="lp-box-logo-text">Packora</span>
+                          <div className="lp-box-badge">PREMIUM B2B</div>
+                          <div className="lp-box-dimensions">160 x 320 x 120 mm</div>
+                          <div className="lp-box-seal">✓ Certified Eco</div>
+                        </div>
+                        <div className="lp-box-ambient-gradient" />
+                      </div>
+                      
+                      {/* Back Face */}
+                      <div className="lp-box-face lp-box-face--back">
+                        <div className="lp-box-label-back">
+                          <div className="lp-box-barcode" />
+                          <div className="lp-box-specs">100% Recyclable Kraft</div>
+                        </div>
+                        <div className="lp-box-ambient-gradient" />
+                      </div>
+                      
+                      {/* Right Face */}
+                      <div className="lp-box-face lp-box-face--right">
+                        <span className="lp-vertical-text">DESIGNED IN EGYPT</span>
+                        <div className="lp-box-ambient-gradient" />
+                      </div>
+                      
+                      {/* Left Face */}
+                      <div className="lp-box-face lp-box-face--left">
+                        <span className="lp-vertical-text">SHIPS IN 7 DAYS</span>
+                        <div className="lp-box-ambient-gradient" />
+                      </div>
+                      
+                      {/* Top Face */}
+                      <div className="lp-box-face lp-box-face--top">
+                        <div className="lp-box-tape" />
+                        <div className="lp-box-ambient-gradient" />
+                      </div>
+                      
+                      {/* Bottom Face */}
+                      <div className="lp-box-face lp-box-face--bottom">
+                        <div className="lp-box-ambient-gradient" />
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div className="lp-cube__badge">
-                  <span className="lp-cube__badge-dot" />
-                  LIVE 3D PREVIEW
+                
+                {/* Soft ground shadow ellipse beneath the box */}
+                <div className="lp-box-ground-shadow" ref={shadowRef} />
+                
+                <div className="lp-box__badge">
+                  <span className="lp-box__badge-dot" />
+                  3D STUDIO PREVIEW
                 </div>
               </div>
             </div>
