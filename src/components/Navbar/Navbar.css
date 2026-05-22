@@ -4,8 +4,8 @@
   justify-content: space-between;
   padding: 16px 32px;
   background-color: #f8f7f4;
-    border-bottom: 1px solid #E5E2DC;
-    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+  border-bottom: 1px solid #E5E2DC;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
 }
 
 .global-navbar-logo {
@@ -50,13 +50,13 @@
 }
 
 .global-navbar-item:hover {
-   background-color: rgba(82, 121, 111, 0.1);
-    color: #1f1f1f;
+  background-color: rgba(82, 121, 111, 0.1);
+  color: #1f1f1f;
 }
 
 .global-navbar-item.active {
-   background: linear-gradient(90deg, #52796F, #5D536B);
-    color: #ffffff;
+  background: linear-gradient(90deg, #52796F, #5D536B);
+  color: #ffffff;
 }
 
 .global-navbar-item.has-badge {

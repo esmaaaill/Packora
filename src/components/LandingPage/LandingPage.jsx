@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { TypeAnimation } from "react-type-animation";
 import { motion } from "framer-motion";
-import { gsap } from "gsap";
 import "./LandingPage.css";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
@@ -131,60 +130,7 @@ const LandingPage = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Tall Box Hover & Inspections */
-  const boxRef = useRef(null);
-  const boxInteractiveRef = useRef(null);
-  const shadowRef = useRef(null);
 
-  const handleBoxMouseMove = useCallback((e) => {
-    if (!boxInteractiveRef.current || !boxRef.current) return;
-    
-    // Pause Y auto-rotation
-    boxRef.current.classList.add("lp-box--paused");
-    
-    const rect = e.currentTarget.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const x = (e.clientX - cx) / (rect.width / 2); // -1 to 1
-    const y = (e.clientY - cy) / (rect.height / 2); // -1 to 1
-    
-    const rotateY = x * 35; // inspect up to 35 deg Y
-    const rotateX = -y * 25; // inspect up to 25 deg X
-    
-    boxInteractiveRef.current.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-    
-    // Animate ground shadow scale and placement
-    if (shadowRef.current) {
-      const shadowScale = 1 - Math.abs(x) * 0.15;
-      const shadowX = x * 20;
-      shadowRef.current.style.transform = `translateX(-50%) translate(${shadowX}px, 0) scale(${shadowScale})`;
-      shadowRef.current.style.opacity = `${0.6 - Math.abs(y) * 0.2}`;
-    }
-  }, []);
-
-  const handleBoxMouseLeave = useCallback(() => {
-    if (!boxInteractiveRef.current || !boxRef.current) return;
-    
-    // Use GSAP to smoothly animate interactive wrapper back to 0
-    gsap.to(boxInteractiveRef.current, {
-      transform: "rotateX(0deg) rotateY(0deg)",
-      duration: 0.8,
-      ease: "power2.out",
-      onComplete: () => {
-        if (boxRef.current) {
-          boxRef.current.classList.remove("lp-box--paused");
-        }
-      }
-    });
-    
-    // Reset ground shadow
-    gsap.to(shadowRef.current, {
-      transform: "translateX(-50%) scale(1)",
-      opacity: 0.4,
-      duration: 0.8,
-      ease: "power2.out"
-    });
-  }, []);
 
   /* Slider auto-play */
   const goToSlide = useCallback((index) => {
@@ -301,64 +247,50 @@ const LandingPage = () => {
               className={`lp-hero__right ${heroInView ? "in-view" : ""}`}
               style={{ transform: `translateY(${scrollY * -0.06}px)` }}
             >
-              <div
-                className="lp-box-wrapper"
-                onMouseMove={handleBoxMouseMove}
-                onMouseLeave={handleBoxMouseLeave}
-              >
+              <div className="lp-box-wrapper">
+                {/* Pulsing ambient glow aura behind box */}
+                <div className="lp-box-glow" />
+
                 <div className="lp-box-perspective">
-                  <div className="lp-box-interactive-wrapper" ref={boxInteractiveRef}>
-                    <div className="lp-tall-box" ref={boxRef}>
-                      {/* Front face with premium design elements and Packora brand */}
+                  <div className="lp-box-breathe">
+                    <div className="lp-tall-box">
+                      {/* Front — single debossed logo mark */}
                       <div className="lp-box-face lp-box-face--front">
-                        <div className="lp-box-label">
-                          <Package size={36} className="lp-box-logo-icon" />
-                          <span className="lp-box-logo-text">Packora</span>
-                          <div className="lp-box-badge">PREMIUM B2B</div>
-                          <div className="lp-box-dimensions">160 x 320 x 120 mm</div>
-                          <div className="lp-box-seal">✓ Certified Eco</div>
-                        </div>
+                        <Package size={44} className="lp-box-logo-emboss" />
                         <div className="lp-box-ambient-gradient" />
                       </div>
-                      
-                      {/* Back Face */}
+
+                      {/* Back */}
                       <div className="lp-box-face lp-box-face--back">
-                        <div className="lp-box-label-back">
-                          <div className="lp-box-barcode" />
-                          <div className="lp-box-specs">100% Recyclable Kraft</div>
-                        </div>
                         <div className="lp-box-ambient-gradient" />
                       </div>
-                      
-                      {/* Right Face */}
+
+                      {/* Right */}
                       <div className="lp-box-face lp-box-face--right">
-                        <span className="lp-vertical-text">DESIGNED IN EGYPT</span>
                         <div className="lp-box-ambient-gradient" />
                       </div>
-                      
-                      {/* Left Face */}
+
+                      {/* Left */}
                       <div className="lp-box-face lp-box-face--left">
-                        <span className="lp-vertical-text">SHIPS IN 7 DAYS</span>
                         <div className="lp-box-ambient-gradient" />
                       </div>
-                      
-                      {/* Top Face */}
+
+                      {/* Top */}
                       <div className="lp-box-face lp-box-face--top">
-                        <div className="lp-box-tape" />
                         <div className="lp-box-ambient-gradient" />
                       </div>
-                      
-                      {/* Bottom Face */}
+
+                      {/* Bottom */}
                       <div className="lp-box-face lp-box-face--bottom">
                         <div className="lp-box-ambient-gradient" />
                       </div>
                     </div>
                   </div>
                 </div>
-                
-                {/* Soft ground shadow ellipse beneath the box */}
-                <div className="lp-box-ground-shadow" ref={shadowRef} />
-                
+
+                {/* Ground shadow */}
+                <div className="lp-box-ground-shadow" />
+
                 <div className="lp-box__badge">
                   <span className="lp-box__badge-dot" />
                   3D STUDIO PREVIEW

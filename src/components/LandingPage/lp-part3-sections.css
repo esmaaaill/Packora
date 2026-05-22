@@ -14,18 +14,113 @@
 
 /* ══════════ STATS ══════════ */
 .lp-stats {
-  background: linear-gradient(135deg, var(--deep-teal), var(--vintage-grape));
-  padding: 56px 0; color: #fff;
+  position: relative;
+  background: #0a0a0f;
+  padding: 72px 0;
+  color: #fff;
+  overflow: hidden;
 }
-.lp-stats__grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 32px; text-align: center; }
-@media (min-width: 768px) { .lp-stats__grid { grid-template-columns: repeat(4,1fr); } }
+
+/* Subtle ambient glow behind the stats */
+.lp-stats::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 300px;
+  background: radial-gradient(ellipse, rgba(82,121,111,0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Noise texture overlay */
+.lp-stats::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.025;
+  pointer-events: none;
+}
+
+.lp-stats__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 768px) {
+  .lp-stats__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
 .lp-stats__item {
-  opacity: 0; transform: translateY(24px);
-  transition: opacity .6s ease var(--delay,0s), transform .6s ease var(--delay,0s);
+  position: relative;
+  padding: 32px 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  transition:
+    opacity 0.7s ease var(--delay, 0s),
+    transform 0.7s cubic-bezier(0.25, 0.4, 0.25, 1) var(--delay, 0s),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
-.lp-stats__item.in-view { opacity: 1; transform: translateY(0); }
-.lp-stats__number { font-size: 3rem; font-weight: 300; line-height: 1; letter-spacing: -1px; }
-.lp-stats__label { opacity: .8; font-size: 14px; margin-top: 6px; font-weight: 500; }
+
+.lp-stats__item.in-view {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.lp-stats__item:hover {
+  border-color: rgba(201, 173, 167, 0.2);
+  box-shadow:
+    0 0 30px -10px rgba(82, 121, 111, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Top accent line — thin colored bar on each card */
+.lp-stats__item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--almond-silk), transparent);
+  opacity: 0.5;
+}
+
+.lp-stats__number {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, #fff 0%, var(--almond-silk) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lp-stats__label {
+  font-size: 13px;
+  margin-top: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 /* ══════════ FEATURES / WHY PACKORA ══════════ */
 .lp-features { padding: 80px 0; background: #0f1f1b; color: #fff; overflow: hidden; }
