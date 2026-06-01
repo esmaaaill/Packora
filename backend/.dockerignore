@@ -1,0 +1,29 @@
+# Backend Docker ignore
+# Keep the build context small — only send what Maven needs
+
+# IDE and OS files
+.idea
+*.iml
+.DS_Store
+*.swp
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Maven build output (will be built fresh inside Docker)
+target/
+
+# Environment / secrets (never copy into image)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+compile_output.txt
+
+# Documentation
+*.md
+README.md

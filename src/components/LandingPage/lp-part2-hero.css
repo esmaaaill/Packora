@@ -1,0 +1,773 @@
+/* ══════════ HERO ══════════ */
+.lp-hero {
+  position: relative;
+  min-height: 95vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #52796F 0%, #5D536B 100%);
+  /* Deep grape/charcoal base */
+  overflow: hidden;
+  padding: 100px 0 60px;
+}
+
+/* Gradient bleed transition into next section */
+.lp-hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  background: linear-gradient(to bottom, transparent, var(--lp-bg));
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* ─── Animated Gradient Mesh Background ─── */
+.lp-mesh-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.lp-mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+.lp-mesh-blob--1 {
+  width: 500px;
+  height: 500px;
+  background: rgba(82, 121, 111, 0.35);
+  /* --deep-teal */
+  top: -10%;
+  left: 10%;
+  animation: floatBlob1 18s ease-in-out infinite alternate;
+}
+
+.lp-mesh-blob--2 {
+  width: 550px;
+  height: 550px;
+  background: rgba(93, 83, 107, 0.3);
+  /* --vintage-grape */
+  bottom: -15%;
+  right: 5%;
+  animation: floatBlob2 22s ease-in-out infinite alternate;
+}
+
+.lp-mesh-blob--3 {
+  width: 420px;
+  height: 420px;
+  background: rgba(201, 173, 167, 0.25);
+  /* --almond-silk */
+  top: 30%;
+  right: 25%;
+  animation: floatBlob3 16s ease-in-out infinite alternate;
+}
+
+.lp-mesh-blob--4 {
+  width: 450px;
+  height: 450px;
+  background: rgba(142, 154, 175, 0.3);
+  /* --lavender-grey */
+  bottom: 20%;
+  left: -5%;
+  animation: floatBlob4 20s ease-in-out infinite alternate;
+}
+
+.lp-mesh-blob--5 {
+  width: 380px;
+  height: 380px;
+  background: rgba(203, 192, 211, 0.25);
+  /* --thistle */
+  top: 15%;
+  left: 45%;
+  animation: floatBlob5 14s ease-in-out infinite alternate;
+}
+
+@keyframes floatBlob1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(120px, 80px) scale(1.1);
+  }
+
+  100% {
+    transform: translate(-50px, 150px) scale(0.95);
+  }
+}
+
+@keyframes floatBlob2 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-150px, -90px) scale(0.9);
+  }
+
+  100% {
+    transform: translate(60px, -180px) scale(1.15);
+  }
+}
+
+@keyframes floatBlob3 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(90px, -110px) scale(1.2);
+  }
+
+  100% {
+    transform: translate(-100px, 70px) scale(0.85);
+  }
+}
+
+@keyframes floatBlob4 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(130px, 100px) scale(0.95);
+  }
+
+  100% {
+    transform: translate(-80px, -140px) scale(1.1);
+  }
+}
+
+@keyframes floatBlob5 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(-90px, 150px) scale(1.15);
+  }
+
+  100% {
+    transform: translate(110px, -60px) scale(0.9);
+  }
+}
+
+.lp-hero__noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.95' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: .03;
+  pointer-events: none;
+  animation: grain 8s steps(10) infinite;
+  z-index: 2;
+}
+
+.lp-hero__container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 4;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .lp-hero__container {
+    padding: 0 48px;
+  }
+}
+
+.lp-hero__grid {
+  display: grid;
+  gap: 48px;
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .lp-hero__grid {
+    grid-template-columns: minmax(0, 760px) 1fr;
+    gap: 96px;
+  }
+}
+
+/* Left Text Content */
+.lp-hero__left {
+  transition: opacity .8s ease;
+}
+
+.lp-hero__left.in-view .lp-fade-up {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.lp-hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .15em;
+  padding: 8px 20px;
+  border-radius: 999px;
+  margin-bottom: 24px;
+}
+
+.lp-hero__badge-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--almond-silk);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.lp-hero__title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(2rem, 4.2vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  color: #fff;
+}
+
+.lp-hero__title span {
+  display: block;
+  white-space: nowrap;
+}
+
+/* FIX 1: typewriter accent line — nowrap on desktop so cycling text never breaks mid-type */
+.lp-hero__title-accent {
+  color: var(--almond-silk);
+  font-weight: 900;
+  display: inline-block;
+  min-height: 1.2em;
+  white-space: nowrap;
+}
+
+/* On mobile (< 768px), relax nowrap so it can wrap gracefully on small screens */
+@media (max-width: 767px) {
+
+  .lp-hero__title span,
+  .lp-hero__title-accent {
+    white-space: normal;
+  }
+}
+
+/* Custom typewriter cursor */
+.react-type-animation::after {
+  content: '|';
+  color: var(--almond-silk) !important;
+  animation: cursorBlink 0.9s step-end infinite;
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+@keyframes cursorBlink {
+
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+.lp-hero__desc {
+  margin-top: 24px;
+  font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 600px;
+  line-height: 1.6;
+}
+
+.lp-hero__cta-group {
+  margin-top: 36px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.lp-hero__benefits {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.lp-hero__benefit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lp-hero__benefit-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--almond-silk);
+  border-radius: 50%;
+}
+
+/* ─── 3D Tall vertical box ─── */
+.lp-hero__right {
+  display: none;
+  justify-content: flex-end;
+  align-items: center;
+  transition: opacity 1s ease 0.2s, transform 1s ease 0.2s;
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+}
+
+.lp-hero__right.in-view {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+@media (min-width: 768px) {
+  .lp-hero__right {
+    display: flex;
+  }
+}
+
+.lp-box-wrapper {
+  position: relative;
+  width: 440px;
+  height: 560px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Grandparent: perspective lives here */
+.lp-box-perspective {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1100px;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s cubic-bezier(0.25, 0.4, 0.25, 1);
+}
+
+.lp-box-wrapper:hover .lp-box-perspective {
+  transform: translateY(-24px);
+}
+
+/*
+ * FIX 2 — Geometry for 240×420×180 portrait box.
+ */
+/* Pulsing ambient glow aura behind the box (GenZ-style) */
+.lp-box-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(82, 121, 111, 0.38) 0%, rgba(93, 83, 107, 0.18) 50%, transparent 70%);
+  filter: blur(64px);
+  pointer-events: none;
+  z-index: 0;
+  animation: glowPulse 4s ease-in-out infinite;
+  transition: opacity 0.5s ease, filter 0.5s ease, background 0.5s ease;
+}
+
+.lp-box-wrapper:hover .lp-box-glow {
+  background: radial-gradient(circle, rgba(201, 173, 167, 0.55) 0%, rgba(82, 121, 111, 0.35) 50%, transparent 70%);
+  filter: blur(80px);
+}
+
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(0.85);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.6;
+  }
+}
+
+/* Outer wrapper: organic breathing — tilt + GenZ-style floating bob */
+.lp-box-breathe {
+  transform-style: preserve-3d;
+  animation: boxBreathe 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes boxBreathe {
+
+  0%,
+  100% {
+    transform: rotateX(-8deg) translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: rotateX(-10deg) translateY(-16px) rotate(1.5deg);
+  }
+}
+
+/* Inner box: slow continuous Y rotation */
+.lp-tall-box {
+  width: 240px;
+  height: 420px;
+  position: relative;
+  transform-style: preserve-3d;
+  animation: boxRotateY 20s linear infinite;
+  will-change: transform;
+}
+
+@keyframes boxRotateY {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+.lp-box-face {
+  position: absolute;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: visible;
+  overflow: hidden;
+}
+
+/* ─── Face positioning & tonal color mapping ─── */
+/* Geometry: 240W × 420H × 180D portrait box */
+/* halfW=120, halfH=210, halfD=90 */
+/* Side centering: left = (240-180)/2 = 30px */
+/* Top/Bottom centering: top = (420-180)/2 = 120px */
+
+/* Front: 240×420, fills parent, halfD forward */
+.lp-box-face--front {
+  width: 240px;
+  height: 420px;
+  top: 0;
+  left: 0;
+  background: linear-gradient(to bottom, #5a857a, #3e5c54);
+  transform: translateZ(90px);
+}
+
+/* Back: 240×420, halfD backward */
+.lp-box-face--back {
+  width: 240px;
+  height: 420px;
+  top: 0;
+  left: 0;
+  background: linear-gradient(to bottom, #4e7568, #3a5349);
+  transform: rotateY(180deg) translateZ(90px);
+}
+
+/* Right: 180×420, centered horizontally, halfW outward */
+.lp-box-face--right {
+  width: 180px;
+  height: 420px;
+  top: 0;
+  left: 30px;
+  background: linear-gradient(to bottom, #50495c, #3d3548);
+  transform: rotateY(90deg) translateZ(120px);
+}
+
+/* Left: 180×420, centered horizontally, halfW outward */
+.lp-box-face--left {
+  width: 180px;
+  height: 420px;
+  top: 0;
+  left: 30px;
+  background: linear-gradient(to bottom, #544d60, #40384c);
+  transform: rotateY(-90deg) translateZ(120px);
+}
+
+/* Top: 240×180, centered vertically, halfH upward */
+.lp-box-face--top {
+  width: 240px;
+  height: 180px;
+  top: 120px;
+  left: 0;
+  background: linear-gradient(to bottom, #d4cbbf, #c0b4ab);
+  transform: rotateX(90deg) translateZ(210px);
+}
+
+/* Bottom: 240×180, centered vertically, halfH downward */
+.lp-box-face--bottom {
+  width: 240px;
+  height: 180px;
+  top: 120px;
+  left: 0;
+  background: linear-gradient(to bottom, #1e1626, #0f0a15);
+  transform: rotateX(-90deg) translateZ(210px);
+}
+
+/* Ambient lighting gradient overlay on every face */
+.lp-box-ambient-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 0%, rgba(0, 0, 0, 0.18) 100%);
+  pointer-events: none;
+}
+
+/* Debossed logo mark on front face — small, low opacity */
+.lp-box-logo-emboss {
+  color: #ffffff;
+  opacity: 0.35;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  z-index: 2;
+}
+
+/* Ground shadow ellipse — synced with the 6s bob */
+.lp-box-ground-shadow {
+  position: absolute;
+  bottom: 45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  height: 28px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  filter: blur(18px);
+  z-index: 0;
+  pointer-events: none;
+  animation: shadowBreathe 6s ease-in-out infinite;
+  transition: transform 0.5s cubic-bezier(0.25, 0.4, 0.25, 1), opacity 0.5s ease, filter 0.5s ease;
+}
+
+.lp-box-wrapper:hover .lp-box-ground-shadow {
+  opacity: 0.15 !important;
+  filter: blur(24px);
+  transform: translateX(-50%) scale(0.7) !important;
+}
+
+@keyframes shadowBreathe {
+
+  0%,
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 0.35;
+  }
+
+  50% {
+    transform: translateX(-50%) scale(0.85);
+    opacity: 0.2;
+  }
+}
+
+.lp-box__badge {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  padding: 8px 20px;
+  border-radius: 999px;
+  white-space: nowrap;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lp-box__badge-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--almond-silk);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+/* Scroll indicator */
+.lp-hero__scroll-indicator {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+
+.lp-hero__scroll-mouse {
+  width: 22px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, .35);
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+}
+
+.lp-hero__scroll-dot {
+  width: 3px;
+  height: 8px;
+  background: rgba(255, 255, 255, .5);
+  border-radius: 3px;
+  animation: scrollDot 1.8s ease-in-out infinite;
+}
+
+@media (max-width: 1023px) {
+  .lp-hero {
+    min-height: auto;
+    padding: 100px 0 60px;
+  }
+
+  .lp-hero__title {
+    letter-spacing: -1px;
+  }
+}
+
+/* Mobile Fallback: Under 768px hide the 3D box */
+@media (max-width: 767px) {
+  .lp-hero__right {
+    display: none !important;
+  }
+}
+
+/* ─── prefers-reduced-motion check ─── */
+@media (prefers-reduced-motion: reduce) {
+
+  .lp-mesh-blob,
+  .lp-tall-box,
+  .lp-box-breathe {
+    animation: none !important;
+  }
+
+  .lp-box-ground-shadow {
+    animation: none !important;
+  }
+
+  .react-type-animation::after {
+    animation: none !important;
+  }
+}
+
+/*............*/
+
+.cube-wrapper {
+  position: relative;
+  width: 440px;
+}
+
+.cube-perspective {
+  display: flex;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+.cube {
+  width: 340px;
+  height: 340px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(-28deg) rotateY(42deg);
+  animation: heroFloat 6s infinite ease-in-out;
+  box-shadow: 0 60px 80px -20px rgba(82, 121, 111, 0.4);
+  margin-right: 25px;
+}
+
+.face {
+  position: absolute;
+  width: 340px;
+  height: 340px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: white;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.front {
+  background: linear-gradient(135deg, #38665A, #47375B);
+  transform: rotateY(0deg) translateZ(170px);
+}
+
+.back {
+  background: linear-gradient(135deg, #A898B8, #667896);
+  transform: rotateY(180deg) translateZ(170px);
+}
+
+.right {
+  background: linear-gradient(135deg, #47375B, #667896);
+  transform: rotateY(90deg) translateZ(170px);
+}
+
+.left {
+  background: linear-gradient(135deg, #667896, #38665A);
+  transform: rotateY(-90deg) translateZ(170px);
+}
+
+.top {
+  background: linear-gradient(135deg, #AB8D85, #47375B);
+  transform: rotateX(90deg) translateZ(170px);
+}
+
+.bottom {
+  background: linear-gradient(135deg, #264038, #38665A);
+  transform: rotateX(-90deg) translateZ(170px);
+}
+
+@keyframes heroFloat {
+
+  0%,
+  100% {
+    transform: rotateX(-28deg) rotateY(42deg) translateY(0);
+  }
+
+  50% {
+    transform: rotateX(-28deg) rotateY(42deg) translateY(-30px);
+  }
+}
+
+.live-preview-badge {
+  position: absolute;
+  bottom: -16px;
+  left: 45%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  color: #52796F;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 10px 32px;
+  border-radius: 9999px;
+  box-shadow: 0 25px 50px -12px rgb(82 121 111);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-dot {
+  width: 12px;
+  height: 12px;
+  background: #52796F;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
