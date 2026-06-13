@@ -45,7 +45,7 @@ export default function HomePage() {
       .then((data) => {
         if (!cancelled) setOrders(data);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => {
         if (!cancelled) setOrdersLoading(false);
       });
@@ -88,7 +88,7 @@ export default function HomePage() {
           </p>
         </div>
 
-       
+
 
         {/* Metrics cards */}
         <div className="metrics-grid">
@@ -105,8 +105,8 @@ export default function HomePage() {
             </div>
           ))}
         </div>
-         {/* New Feature: 3D Customizer */}
-         <section className="new-feature">
+        {/* New Feature: 3D Customizer */}
+        <section className="new-feature">
           <div className="new-feature-content">
             <div className="new-feature-header">
               <span className="new-feature-badge">
@@ -190,7 +190,7 @@ export default function HomePage() {
           </section>
 
           {/* Recent Orders Widget */}
-          
+
         </div>
 
         {/* Browse by Category - from real API data */}
@@ -222,9 +222,9 @@ export default function HomePage() {
             </div>
           </section>
         )}
-      
+
       </main>
-  <Footer />
+    
     </div>
   );
 }

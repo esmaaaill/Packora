@@ -113,7 +113,7 @@ export default function EmailCheck() {
           </Link>
         </div>
 
-       
+
       </div>
     </div>
   );

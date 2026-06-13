@@ -7,17 +7,17 @@ import './ResetPassword.css';
 const API_BASE = `${BASE_URL}/api/auth`;
 
 export default function ResetPassword() {
-  const [searchParams]              = useSearchParams();
-  const navigate                    = useNavigate();
-  const token                       = searchParams.get('token');
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const token = searchParams.get('token');
 
   const [tokenValid, setTokenValid] = useState(null);   // null = checking, true/false
-  const [newPassword, setNewPass]   = useState('');
-  const [confirmPass, setConfirm]   = useState('');
-  const [showPass, setShowPass]     = useState(false);
-  const [loading, setLoading]       = useState(false);
-  const [error, setError]           = useState('');
-  const [success, setSuccess]       = useState(false);
+  const [newPassword, setNewPass] = useState('');
+  const [confirmPass, setConfirm] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   /* ── Validate token on mount ── */
   useEffect(() => {
@@ -45,9 +45,9 @@ export default function ResetPassword() {
     setLoading(true);
     try {
       const res = await fetch(`${API_BASE}/reset-password`, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ token, newPassword }),
+        body: JSON.stringify({ token, newPassword }),
       });
 
       const data = await res.json();

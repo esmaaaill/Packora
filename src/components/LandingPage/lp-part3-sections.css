@@ -15,7 +15,7 @@
 /* ══════════ STATS ══════════ */
 .lp-stats {
   position: relative;
-  background: #0a0a0f;
+  background:  linear-gradient(135deg, var(--deep-teal) 0%, var(--vintage-grape) 100%);
   padding: 72px 0;
   color: #fff;
   overflow: hidden;
@@ -123,9 +123,9 @@
 }
 
 /* ══════════ FEATURES / WHY PACKORA ══════════ */
-.lp-features { padding: 80px 0; background: #0f1f1b; color: #fff; overflow: hidden; }
+.lp-features { padding: 80px 0; background: var(--background); color: var(--foreground); overflow: hidden; }
 .lp-features .lp-eyebrow { color: var(--almond-silk); background: rgba(201,173,167,.12); }
-.lp-features .lp-heading { color: #fff; }
+.lp-features .lp-heading { color: var(--foreground); }
 .lp-features .lp-heading-accent { color: var(--almond-silk); }
 .lp-features .lp-heading-line { background: var(--almond-silk); }
 
@@ -136,46 +136,37 @@
 .lp-features__card {
   position: relative; cursor: pointer;
   opacity: 0; transform: translateY(30px);
-  transition: opacity .6s ease var(--delay,0s), transform .6s ease var(--delay,0s);
+  transition: opacity .6s ease var(--delay,0s), transform .6s ease var(--delay,0s), box-shadow .3s;
 }
 .lp-features__card.in-view { opacity: 1; transform: translateY(0); }
 
 .lp-features__card-glow {
   position: absolute; inset: -1px; border-radius: 18px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, transparent), transparent, color-mix(in srgb, var(--accent) 30%, transparent));
-  filter: blur(8px); opacity: 0; transition: opacity .4s;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent), transparent, color-mix(in srgb, var(--accent) 20%, transparent));
+  filter: blur(10px); opacity: 0; transition: opacity .4s, background .3s;
 }
 .lp-features__card:hover .lp-features__card-glow { opacity: 1; }
 
-.lp-features__card-inner {
-  position: relative; background: #1a2a25; border-radius: 18px;
-  padding: 28px 24px; border: 1px solid rgba(255,255,255,.08);
-  overflow: hidden; height: 100%; display: flex; flex-direction: column;
-  transition: transform .35s ease, box-shadow .35s ease;
+.lp-features__card-inner { position: relative; background: linear-gradient(135deg, var(--card) 0%, var(--background) 100%); border-radius: 18px;
+  padding: 28px 24px; border: 1px solid rgba(255,255,255,.08); overflow: hidden; height: 100%; display: flex; flex-direction: column; transition: transform .35s ease, box-shadow .35s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 .lp-features__card:hover .lp-features__card-inner {
   transform: translateY(-6px);
-  box-shadow: 0 20px 40px -10px rgba(0,0,0,.4);
+  box-shadow: 0 12px 24px -6px rgba(0,0,0,0.1);
 }
 
-.lp-features__icon {
-  width: 44px; height: 44px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  margin-bottom: 16px; color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
-  transition: transform .3s; flex-shrink: 0;
-}
+.lp-features__icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: var(--accent); background: color-mix(in srgb, var(--accent) 15%, transparent); transition: transform .3s; flex-shrink: 0; }
 .lp-features__card:hover .lp-features__icon { transform: scale(1.1) rotate(5deg); }
 
 .lp-features__card-body { flex: 1; }
-.lp-features__title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 4px; }
-.lp-features__subtitle { font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: .08em; }
-.lp-features__desc { font-size: 13px; color: rgba(255,255,255,.5); line-height: 1.5; margin-top: 8px; }
+.lp-features__title { font-size: 18px; font-weight: 800; color: var(--foreground); margin-bottom: 4px; transition: color .3s; }
+.lp-features__subtitle { font-size: 12px; font-weight: 600; color: var(--almond-silk); letter-spacing: .08em; }
+.lp-features__desc { font-size: 13px; color: var(--foreground); opacity: 0.8; line-height: 1.5; margin-top: 8px; }
 
 .lp-features__accent-line {
-  height: 2px; border-radius: 99px; background: var(--accent); margin-top: 20px;
+  height: 2px; border-radius: 99px; background: linear-gradient(90deg, transparent, var(--accent), transparent); margin-top: 20px;
   transform: scaleX(0); transform-origin: left;
-  transition: transform .8s cubic-bezier(.25,.4,.25,1) var(--delay,0s);
+  transition: transform .8s cubic-bezier(.25,.4,.25,1) var(--delay,0s), background .3s;
 }
 .lp-features__card.in-view .lp-features__accent-line { transform: scaleX(1); }
 

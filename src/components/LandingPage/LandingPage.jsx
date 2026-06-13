@@ -4,13 +4,13 @@ import { TypeAnimation } from "react-type-animation";
 import { motion } from "framer-motion";
 import "./LandingPage.css";
 import Navbar from "../Navbar/Navbar";
-import Footer from "../Footer/Footer";
+
 import { useAuth } from "../../context/AuthContext";
 import {
   Package, Box, Truck, Palette, ShoppingCart, Layers,
   Cpu, Zap, ArrowRight, ChevronLeft, ChevronRight,
   Shield, Clock, Recycle, Headphones, Star, CheckCircle,
-  BarChart3, Globe,
+  BarChart3
 } from "lucide-react";
 
 /* ─── Intersection Observer hook ─── */
@@ -76,7 +76,7 @@ const processSteps = [
   { num: "04", title: "Track & Receive", desc: "Real-time tracking from production to your doorstep.", icon: Truck },
 ];
 
-const partners = [
+/*const partners = [
   { name: "EgyptPost", type: "Shipping" },
   { name: "Aramex", type: "Shipping" },
   { name: "DHL Express", type: "Shipping" },
@@ -85,7 +85,7 @@ const partners = [
   { name: "BoxMakers", type: "Packaging" },
   { name: "KraftPack", type: "Packaging" },
   { name: "EcoPack", type: "Packaging" },
-];
+];*/
 
 const stats = [
   { value: "50", suffix: "K+", label: "Happy Brands" },
@@ -115,7 +115,7 @@ const LandingPage = () => {
   const [heroRef, heroInView] = useInView({ threshold: 0.1 });
   const [featRef, featInView] = useInView();
   const [procRef, procInView] = useInView();
-  const [partRef, partInView] = useInView();
+  /*const [partRef, partInView] = useInView();*/
   const [statRef, statInView] = useInView();
   const [testRef, testInView] = useInView();
   const [trustRef, trustInView] = useInView();
@@ -139,7 +139,7 @@ const LandingPage = () => {
   const nextSlide = useCallback(() => setSlideIndex((i) => (i + 1) % FEATURE_SLIDE_COUNT), []);
   const prevSlide = useCallback(() => setSlideIndex((i) => (i - 1 + FEATURE_SLIDE_COUNT) % FEATURE_SLIDE_COUNT), []);
   useEffect(() => {
-    const id = setInterval(() => setSlideIndex((i) => (i + 1) % FEATURE_SLIDE_COUNT), 5000);
+    const id = setInterval(() => setSlideIndex((i) => (i + 1) % FEATURE_SLIDE_COUNT), 2500);
     return () => clearInterval(id);
   }, []);
 
@@ -180,7 +180,7 @@ const LandingPage = () => {
 
                 <h1 className="lp-hero__title">
                   <span className="lp-fade-up" style={{ "--delay": "0.1s" }}>The smarter way to</span>
-                  <span className="lp-hero__title-accent lp-fade-up" style={{ "--delay": "0.2s" }}>
+                  <span className="lp-hero__title-accent lp-fade-up" style={{ "--delay": "0.25s" }}>
                     <TypeAnimation
                       sequence={[
                         "design your packaging.",
@@ -227,7 +227,7 @@ const LandingPage = () => {
                     className="lp-btn lp-btn--outline"
                     id="hero-cta-catalog"
                   >
-                    Explore Catalogue
+                    Explore Catalog
                   </button>
                 </div>
 
@@ -251,37 +251,37 @@ const LandingPage = () => {
                 {/* Pulsing ambient glow aura behind box */}
                 <div className="lp-box-glow" />
 
-                <div className="lp-box-perspective">
+                <div className="cube-perspective">
                   <div className="lp-box-breathe">
                     <div className="lp-tall-box">
                       {/* Front — single debossed logo mark */}
-                      <div className="lp-box-face lp-box-face--front">
+                      <div className="lp-box-face face front">
                         <Package size={44} className="lp-box-logo-emboss" />
                         <div className="lp-box-ambient-gradient" />
                       </div>
 
                       {/* Back */}
-                      <div className="lp-box-face lp-box-face--back">
+                      <div className="lp-box-face face back">
                         <div className="lp-box-ambient-gradient" />
                       </div>
 
                       {/* Right */}
-                      <div className="lp-box-face lp-box-face--right">
+                      <div className="lp-box-face face right">
                         <div className="lp-box-ambient-gradient" />
                       </div>
 
                       {/* Left */}
-                      <div className="lp-box-face lp-box-face--left">
+                      <div className="lp-box-face face left">
                         <div className="lp-box-ambient-gradient" />
                       </div>
 
                       {/* Top */}
-                      <div className="lp-box-face lp-box-face--top">
+                      <div className="lp-box-face face top">
                         <div className="lp-box-ambient-gradient" />
                       </div>
 
                       {/* Bottom */}
-                      <div className="lp-box-face lp-box-face--bottom">
+                      <div className="lp-box-face face bottom">
                         <div className="lp-box-ambient-gradient" />
                       </div>
                     </div>
@@ -304,6 +304,110 @@ const LandingPage = () => {
         <div className="lp-hero__scroll-indicator lp-fade-up" style={{ "--delay": "1.2s" }}>
           <div className="lp-hero__scroll-mouse">
             <div className="lp-hero__scroll-dot" />
+          </div>
+        </div>
+      </section>
+
+     {/* ──────── HOW IT WORKS ──────── */}
+      <section className="lp-process" ref={procRef}>
+        <div className="lp-container">
+          <div className={`lp-section-header ${procInView ? "in-view" : ""}`}>
+            <span className="lp-eyebrow lp-fade-up" style={{ "--delay": "0s" }}>HOW IT WORKS</span>
+            <h2 className="lp-heading lp-fade-up" style={{ "--delay": "0.1s" }}>
+              From Concept to <span className="lp-heading-accent">Doorstep</span>
+            </h2>
+            <p className="lp-subheading lp-fade-up" style={{ "--delay": "0.2s" }}>
+              Four simple steps from design to delivery. Packaging made effortless.
+            </p>
+          </div>
+
+          <div className="lp-process__timeline">
+            {processSteps.map((step, i) => (
+              <div
+                key={step.num}
+                className={`lp-process__step ${procInView ? "in-view" : ""}`}
+                style={{ "--delay": `${0.15 + i * 0.12}s` }}
+                id={`process-step-${i}`}
+              >
+                <div className="lp-process__step-num">{step.num}</div>
+                <div className="lp-process__step-icon">
+                  <step.icon size={24} />
+                </div>
+                <h3 className="lp-process__step-title">{step.title}</h3>
+                <p className="lp-process__step-desc">{step.desc}</p>
+                {i < processSteps.length - 1 && <div className="lp-process__connector" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>  
+
+      {/* ──────── FEATURE SLIDER ──────── */}
+      <section className="lp-slider" ref={sliderRef}>
+        <div className="lp-container">
+          <div className={`lp-section-header ${sliderInView ? "in-view" : ""}`}>
+            <span className="lp-eyebrow lp-fade-up" style={{ "--delay": "0s" }}>PLATFORM FEATURES</span>
+            <h2 className="lp-heading lp-fade-up" style={{ "--delay": "0.1s" }}>
+              Everything You Need to <span className="lp-heading-accent">Ship</span>
+            </h2>
+          </div>
+
+          <div className="slider-stage">
+            {slides.map((slide, i) => {
+              const raw = ((i - slideIndex) % FEATURE_SLIDE_COUNT + FEATURE_SLIDE_COUNT) % FEATURE_SLIDE_COUNT;
+              const offset = raw > FEATURE_SLIDE_COUNT / 2 ? raw - FEATURE_SLIDE_COUNT : raw;
+              let cls = "slide-card";
+              if (offset === 0) cls += " slide-card--active";
+              else if (offset === -1) cls += " slide-card--prev";
+              else if (offset === 1) cls += " slide-card--next";
+              else cls += " slide-card--hidden";
+              return (
+                <div
+                  key={i}
+                  className={cls}
+                  onClick={() => goToSlide(i)}
+                  onMouseEnter={() => { if (offset !== 0) setTimeout(() => goToSlide(i), 300); }}
+                  role="button"
+                  tabIndex={offset === 0 ? 0 : -1}
+                  aria-label={`Go to slide ${i + 1}: ${slide.title}`}
+                >
+                  <div className="slide-card-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/${slide.img})` }} />
+                  <div className="slide-card-overlay" />
+                  <div className="slide-card-body">
+                    <span className="slide-card-count">{slide.num} / {FEATURE_SLIDE_COUNT}</span>
+                    <div className="slide-card-icon"><slide.icon size={32} /></div>
+                    <h3 className="slide-card-title">{slide.title}</h3>
+                    <p className="slide-card-desc">{slide.desc}</p>
+                  </div>
+                  <div className="lp-features__card-body">
+                    <h3 className="lp-features__title">{f.title}</h3>
+                    <span className="lp-features__subtitle">{f.subtitle}</span>
+                    <p className="lp-features__desc">{f.desc}</p>
+                  </div>
+                  <div className="lp-features__accent-line" />
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="slider-controls">
+            <button type="button" onClick={prevSlide} className="ctrl-btn" aria-label="Previous slide" id="slider-prev">
+              <ChevronLeft size={20} />
+            </button>
+            <div className="ctrl-dots">
+              {Array.from({ length: FEATURE_SLIDE_COUNT }, (_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={`ctrl-dot${slideIndex === i ? " ctrl-dot--active" : ""}`}
+                  aria-label={`Go to slide ${i + 1}`}
+                  onClick={() => goToSlide(i)}
+                />
+              ))}
+            </div>
+            <button type="button" onClick={nextSlide} className="ctrl-btn" aria-label="Next slide" id="slider-next">
+              <ChevronRight size={20} />
+            </button>
           </div>
         </div>
       </section>
@@ -385,127 +489,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* ──────── HOW IT WORKS ──────── */}
-      <section className="lp-process" ref={procRef}>
-        <div className="lp-container">
-          <div className={`lp-section-header ${procInView ? "in-view" : ""}`}>
-            <span className="lp-eyebrow lp-fade-up" style={{ "--delay": "0s" }}>HOW IT WORKS</span>
-            <h2 className="lp-heading lp-fade-up" style={{ "--delay": "0.1s" }}>
-              From Concept to <span className="lp-heading-accent">Doorstep</span>
-            </h2>
-            <p className="lp-subheading lp-fade-up" style={{ "--delay": "0.2s" }}>
-              Four simple steps from design to delivery. Packaging made effortless.
-            </p>
-          </div>
-
-          <div className="lp-process__timeline">
-            {processSteps.map((step, i) => (
-              <div
-                key={step.num}
-                className={`lp-process__step ${procInView ? "in-view" : ""}`}
-                style={{ "--delay": `${0.15 + i * 0.12}s` }}
-                id={`process-step-${i}`}
-              >
-                <div className="lp-process__step-num">{step.num}</div>
-                <div className="lp-process__step-icon">
-                  <step.icon size={24} />
-                </div>
-                <h3 className="lp-process__step-title">{step.title}</h3>
-                <p className="lp-process__step-desc">{step.desc}</p>
-                {i < processSteps.length - 1 && <div className="lp-process__connector" />}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ──────── FEATURE SLIDER ──────── */}
-      <section className="lp-slider" ref={sliderRef}>
-        <div className="lp-container">
-          <div className={`lp-section-header ${sliderInView ? "in-view" : ""}`}>
-            <span className="lp-eyebrow lp-fade-up" style={{ "--delay": "0s" }}>PLATFORM FEATURES</span>
-            <h2 className="lp-heading lp-fade-up" style={{ "--delay": "0.1s" }}>
-              Everything You Need to <span className="lp-heading-accent">Ship</span>
-            </h2>
-          </div>
-
-          <div className="slider-stage">
-            {slides.map((slide, i) => {
-              const raw = ((i - slideIndex) % FEATURE_SLIDE_COUNT + FEATURE_SLIDE_COUNT) % FEATURE_SLIDE_COUNT;
-              const offset = raw > FEATURE_SLIDE_COUNT / 2 ? raw - FEATURE_SLIDE_COUNT : raw;
-              let cls = "slide-card";
-              if (offset === 0) cls += " slide-card--active";
-              else if (offset === -1) cls += " slide-card--prev";
-              else if (offset === 1) cls += " slide-card--next";
-              else cls += " slide-card--hidden";
-              return (
-                <div
-                  key={i}
-                  className={cls}
-                  onClick={() => goToSlide(i)}
-                  onMouseEnter={() => { if (offset !== 0) setTimeout(() => goToSlide(i), 300); }}
-                  role="button"
-                  tabIndex={offset === 0 ? 0 : -1}
-                  aria-label={`Go to slide ${i + 1}: ${slide.title}`}
-                >
-                  <div className="slide-card-bg" style={{ backgroundImage: `url(${process.env.PUBLIC_URL}/img/${slide.img})` }} />
-                  <div className="slide-card-overlay" />
-                  <div className="slide-card-body">
-                    <span className="slide-card-count">{slide.num} / {FEATURE_SLIDE_COUNT}</span>
-                    <div className="slide-card-icon"><slide.icon size={32} /></div>
-                    <h3 className="slide-card-title">{slide.title}</h3>
-                    <p className="slide-card-desc">{slide.desc}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="slider-controls">
-            <button type="button" onClick={prevSlide} className="ctrl-btn" aria-label="Previous slide" id="slider-prev">
-              <ChevronLeft size={20} />
-            </button>
-            <div className="ctrl-dots">
-              {Array.from({ length: FEATURE_SLIDE_COUNT }, (_, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={`ctrl-dot${slideIndex === i ? " ctrl-dot--active" : ""}`}
-                  aria-label={`Go to slide ${i + 1}`}
-                  onClick={() => goToSlide(i)}
-                />
-              ))}
-            </div>
-            <button type="button" onClick={nextSlide} className="ctrl-btn" aria-label="Next slide" id="slider-next">
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ──────── PARTNERS / INTEGRATIONS ──────── */}
-      <section className="lp-partners" ref={partRef}>
-        <div className="lp-container">
-          <div className={`lp-section-header ${partInView ? "in-view" : ""}`}>
-            <span className="lp-eyebrow lp-fade-up" style={{ "--delay": "0s" }}>INTEGRATIONS</span>
-            <h2 className="lp-heading lp-fade-up" style={{ "--delay": "0.1s" }}>
-              Trusted <span className="lp-heading-accent">Partners</span>
-            </h2>
-          </div>
-
-          <div className="lp-partners__marquee-wrap">
-            <div className="lp-partners__marquee">
-              {[...partners, ...partners].map((p, i) => (
-                <div key={i} className="lp-partners__item">
-                  <Globe size={16} />
-                  <span className="lp-partners__name">{p.name}</span>
-                  <span className="lp-partners__type">{p.type}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      
 
       {/* ──────── TESTIMONIALS ──────── */}
       <section className="lp-testimonials" ref={testRef}>
@@ -582,7 +566,7 @@ const LandingPage = () => {
         <div className="lp-cta__watermark">PACKORA</div>
       </section>
 
-      <Footer />
+      
     </div>
   );
 };

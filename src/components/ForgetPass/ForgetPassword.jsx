@@ -7,10 +7,10 @@ import './ForgetPassword.css';
 const API_BASE = `${BASE_URL}/api/auth`;
 
 export default function ForgetPassword() {
-  const [email, setEmail]       = useState('');
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState('');
-  const navigate                = useNavigate();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,9 +19,9 @@ export default function ForgetPassword() {
 
     try {
       const res = await fetch(`${API_BASE}/forgot-password`, {
-        method:  'POST',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ email }),
+        body: JSON.stringify({ email }),
       });
 
       // Always navigate to confirmation screen (even if email not found —
